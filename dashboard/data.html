@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>데이터 · 보조지표 — 주식봇</title>
+  <link rel="stylesheet" href="assets/styles.css?v=20260717-3">
+  <script src="data.js"></script>
+  <script defer src="assets/app.js?v=20260717-3"></script>
+</head>
+<body data-page="data">
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark"></span><span>주식봇 <small>국내주식 수급 대시보드</small></span></a>
+    <div class="live-state"><span class="live-dot"></span><span data-updated>데이터 확인 중</span></div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <nav class="nav">
+        <a data-page="home" href="index.html">특이동향</a>
+        <a data-page="stocks" href="stocks.html">종목별 검색</a>
+        <a data-page="rankings" href="rankings.html">누적 수급 순위</a>
+        <a data-page="etf" href="etf.html">ETF 자금흐름</a>
+        <a data-page="momentum" href="momentum.html">52주 신고가·등락률</a>
+        <a data-page="data" href="data.html">데이터 · 보조지표</a>
+      </nav>
+    </aside>
+    <main class="content data-page-content">
+      <header class="page-hero data-hero">
+        <div class="eyebrow">DATA LAB</div>
+        <h1 class="page-title">데이터 · 보조지표</h1>
+        <p class="page-copy">옵션 만기와 휴장 일정을 먼저 확인하고, 향후 RSI·시장 보조지표·해외 동향을 한곳에서 확장해 살펴보는 데이터 페이지입니다.</p>
+      </header>
+
+      <nav class="module-tabs" aria-label="데이터 모듈">
+        <button type="button" class="module-tab active"><span>옵션 캘린더</span><small>2026 Cboe</small></button>
+        <button type="button" class="module-tab planned" disabled><span>RSI</span><small>추가 예정</small></button>
+        <button type="button" class="module-tab planned" disabled><span>시장 보조지표</span><small>추가 예정</small></button>
+        <button type="button" class="module-tab planned" disabled><span>해외 동향</span><small>추가 예정</small></button>
+      </nav>
+
+      <section class="option-overview" aria-label="옵션 일정 요약">
+        <article class="calendar-kpi accent"><span>선택 월</span><strong id="calendar-month-kpi">-</strong><small id="calendar-event-count">일정 확인 중</small></article>
+        <article class="calendar-kpi"><span>다음 표준 만기</span><strong id="next-standard-date">-</strong><small id="next-standard-dday">-</small></article>
+        <article class="calendar-kpi"><span>다음 VIX 만기</span><strong id="next-vix-date">-</strong><small id="next-vix-dday">-</small></article>
+        <article class="calendar-kpi holiday"><span>다음 거래소 휴일</span><strong id="next-holiday-date">-</strong><small id="next-holiday-name">-</small></article>
+      </section>
+
+      <section class="option-calendar-panel">
+        <div class="calendar-toolbar">
+          <div>
+            <div class="calendar-kicker">CBOE OPTIONS · 2026</div>
+            <h2 id="calendar-title">2026년 옵션 만기 캘린더</h2>
+          </div>
+          <div class="calendar-nav" aria-label="월 이동">
+            <button id="calendar-prev" type="button" aria-label="이전 달">‹</button>
+            <button id="calendar-today" type="button">이번 달</button>
+            <button id="calendar-next" type="button" aria-label="다음 달">›</button>
+          </div>
+        </div>
+
+        <div id="calendar-months" class="month-picker" aria-label="월 선택"></div>
+
+        <div class="calendar-layout">
+          <div class="calendar-main">
+            <div class="calendar-weekdays" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+            <div id="options-calendar" class="options-calendar" aria-live="polite"></div>
+          </div>
+          <aside class="calendar-side">
+            <section>
+              <div class="side-heading"><h3>월간 핵심 일정</h3><span id="month-event-badge">0건</span></div>
+              <div id="month-events" class="month-events"></div>
+            </section>
+            <section class="calendar-legend-section">
+              <h3>일정 구분</h3>
+              <div id="calendar-legend" class="calendar-legend"></div>
+            </section>
+          </aside>
+        </div>
+
+        <div class="recurring-note">
+          <strong>반복 만기 안내</strong>
+          <span>VIX Weeklys는 통상 수요일 만기입니다.</span>
+          <span>SPX·XSP Weeklys는 표준 3번째 금요일, 월말·분기말 만기와 겹치는 날을 제외한 영업일마다 만기됩니다.</span>
+        </div>
+        <footer class="calendar-source">Cboe 2026 Options Expiration Calendar 기준 · 일정은 거래소 사정에 따라 변경될 수 있습니다.</footer>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080b14">
+  <title>주식봇 대시보드</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif;background:#080b14;color:#f5f7fb}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 20% 0,#17223d 0,transparent 38%),#080b14}
+    main{width:min(920px,calc(100% - 32px));padding:48px}.eyebrow{color:#78d8bb;font-weight:800;letter-spacing:.12em;text-transform:uppercase}h1{font-size:clamp(38px,7vw,72px);line-height:1;margin:16px 0 18px}p{color:#9da9bf;font-size:18px;line-height:1.7;margin:0 0 32px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}a{display:block;padding:28px;border:1px solid #29334a;border-radius:22px;background:linear-gradient(145deg,#141a2a,#0f1420);color:inherit;text-decoration:none;transition:.2s}a:hover{border-color:#78d8bb;transform:translateY(-2px)}strong{display:block;font-size:24px;margin-bottom:8px}span{color:#9da9bf}@media(max-width:680px){main{padding:24px 0}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Stock Intelligence</div>
+    <h1>주식봇</h1>
+    <p>국내 수급과 글로벌 신고·신저가 동향을 한곳에서 확인하세요.</p>
+    <div class="grid">
+      <a href="dashboard/"><strong>국내 수급 대시보드</strong><span>외국인·기관·연기금 누적 수급과 종목별 검색</span></a>
+      <a href="global/"><strong>글로벌 마켓 스캐너</strong><span>미국·홍콩·중국A·일본 신고·신저가와 관련 뉴스</span></a>
+    </div>
+  </main>
+</body>
+</html>

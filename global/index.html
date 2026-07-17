@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080b14">
+  <title>글로벌 마켓 스캐너</title>
+  <link rel="stylesheet" href="assets/styles.css?v=20260717-1">
+  <script src="global-data.js"></script>
+  <script defer src="assets/app.js?v=20260717-1"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="site-brand" href="index.html"><span class="brand-icon">△</span><span><strong>글로벌 마켓 스캐너</strong><small>US · Hong Kong · China A · Japan</small></span></a>
+    <div class="live-state"><span class="live-dot"></span><span id="global-updated">데이터 확인 중</span></div>
+  </header>
+  <main class="global-content">
+      <header class="global-hero">
+        <div>
+          <div class="global-title-row"><span aria-hidden="true">🌏</span><h1>글로벌 신고·신저가 스캔</h1><span id="global-date" class="global-date">-</span></div>
+          <p id="global-method">미국·홍콩·중국A·일본 · 시총 $10B+ · 60거래일/52주</p>
+        </div>
+        <button id="export-global" class="global-export" type="button">↓ CSV 반출</button>
+      </header>
+
+      <section id="global-narrative" class="global-narrative">데이터를 불러오는 중입니다.</section>
+      <section id="global-market-cards" class="global-market-cards" aria-label="시장 요약"></section>
+
+      <section class="global-controls" aria-label="글로벌 스캐너 필터">
+        <div class="segmented" id="view-tabs">
+          <button type="button" data-view="stocks" class="active">종목</button>
+          <button type="button" data-view="sectors">섹터동향</button>
+          <button type="button" data-view="etfs">섹터ETF</button>
+        </div>
+        <div class="segmented" id="market-tabs">
+          <button type="button" data-market="all" class="active">전체 시장</button>
+          <button type="button" data-market="us">미국</button>
+          <button type="button" data-market="hk">홍콩</button>
+          <button type="button" data-market="cn">중국A</button>
+          <button type="button" data-market="jp">일본</button>
+        </div>
+        <div class="segmented signal-tabs" id="signal-tabs">
+          <button type="button" data-signal="all" class="active">신고+신저</button>
+          <button type="button" data-signal="high">신고가</button>
+          <button type="button" data-signal="low">신저가</button>
+          <button type="button" data-signal="new">NEW만</button>
+          <button type="button" data-signal="52w">52주만</button>
+        </div>
+        <label class="global-search"><span>⌕</span><input id="global-search" type="search" placeholder="티커 · 종목명 · 섹터 · 이유 검색"></label>
+        <span id="global-count" class="global-count">0종목</span>
+      </section>
+
+      <section id="global-panel" class="global-panel" aria-live="polite"></section>
+      <footer class="global-footnote">
+        <p>60거래일 판정은 TradingView 3개월 고가·저가를 사용합니다. 52주 배지는 52주 고가·저가 도달 종목입니다.</p>
+        <p>NEW는 당일 신규 도달 또는 일별 저장 이력상 새로 포착된 종목입니다. 이유 열은 최근 7일 종목 관련 뉴스 중 회사명·티커 관련성이 확인된 기사만 표시합니다.</p>
+      </footer>
+    </main>
+</body>
+</html>

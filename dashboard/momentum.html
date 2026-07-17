@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>52주 신고가·등락률 — 주식봇</title>
+  <link rel="stylesheet" href="assets/styles.css?v=20260717-3">
+  <script src="data.js"></script>
+  <script defer src="assets/app.js?v=20260717-3"></script>
+</head>
+<body data-page="momentum">
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark"></span><span>주식봇 <small>국내주식 수급 대시보드</small></span></a>
+    <div class="live-state"><span class="live-dot"></span><span data-updated>데이터 확인 중</span></div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <nav class="nav">
+        <a data-page="home" href="index.html">특이동향</a>
+        <a data-page="stocks" href="stocks.html">종목별 검색</a>
+        <a data-page="rankings" href="rankings.html">누적 수급 순위</a>
+        <a data-page="etf" href="etf.html">ETF 자금흐름</a>
+        <a data-page="momentum" href="momentum.html">52주 신고가·등락률</a>
+      <a data-page="data" href="data.html">데이터 · 보조지표</a></nav>
+    </aside>
+    <main class="content">
+      <header class="page-hero">
+        <div class="eyebrow">Market Momentum</div>
+        <h1 class="page-title">52주 신고가·등락률</h1>
+        <p class="page-copy">코스피와 코스닥의 신고가 종목 및 일간·주간 등락률 상위 종목을 확인하세요.</p>
+      </header>
+      <div class="momentum-controls">
+        <div class="toolbar momentum-mode">
+          <button class="pill active" data-momentum-mode="high">52주 신고가</button>
+          <button class="pill" data-momentum-mode="change">등락률</button>
+        </div>
+        <div class="filter-panel">
+          <span class="filter-label">시장</span>
+          <div class="toolbar">
+            <button class="pill active" data-momentum-market="kospi">코스피</button>
+            <button class="pill" data-momentum-market="kosdaq">코스닥</button>
+          </div>
+          <span id="momentum-period-divider" class="filter-divider hidden"></span>
+          <span id="momentum-period-label" class="filter-label hidden">기간</span>
+          <div id="momentum-period" class="toolbar hidden">
+            <button class="pill active" data-momentum-period="daily">일간</button>
+            <button class="pill" data-momentum-period="weekly">주간</button>
+          </div>
+          <span id="momentum-direction-divider" class="filter-divider hidden"></span>
+          <span id="momentum-direction-label" class="filter-label hidden">방향</span>
+          <div id="momentum-direction" class="toolbar hidden">
+            <button class="pill active" data-momentum-direction="1">상승</button>
+            <button class="pill" data-momentum-direction="-1">하락</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap momentum-table">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>회사명</th><th>종가</th><th>등락률</th><th>시총</th><th>섹터</th></tr></thead>
+          <tbody id="momentum-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
