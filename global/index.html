@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#080b14">
   <title>글로벌 마켓 스캐너</title>
-  <link rel="stylesheet" href="assets/styles.css?v=20260717-1">
+  <link rel="stylesheet" href="assets/styles.css?v=20260721-2">
   <script src="global-data.js"></script>
-  <script defer src="assets/app.js?v=20260717-1"></script>
+  <script defer src="assets/app.js?v=20260721-2"></script>
 </head>
 <body>
   <header class="site-header">
@@ -17,10 +17,13 @@
   <main class="global-content">
       <header class="global-hero">
         <div>
-          <div class="global-title-row"><span aria-hidden="true">🌏</span><h1>글로벌 신고·신저가 스캔</h1><span id="global-date" class="global-date">-</span></div>
+          <div class="global-title-row"><span aria-hidden="true">📊</span><h1>신고·신저가 스캔</h1><span id="global-date" class="global-date">-</span></div>
           <p id="global-method">미국·홍콩·중국A·일본 · 시총 $10B+ · 60거래일/52주</p>
         </div>
-        <button id="export-global" class="global-export" type="button">↓ CSV 반출</button>
+        <div class="global-actions">
+          <label class="date-picker"><span class="sr-only">저장 날짜 선택</span><select id="global-date-select" aria-label="저장 날짜 선택"><option>불러오는 중</option></select></label>
+          <button id="export-global" class="global-export" type="button">↓ Excel 반출</button>
+        </div>
       </header>
 
       <section id="global-narrative" class="global-narrative">데이터를 불러오는 중입니다.</section>
