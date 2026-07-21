@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>데이터 · 보조지표 — 주식봇</title>
-  <link rel="stylesheet" href="assets/styles.css?v=20260717-3">
+  <link rel="stylesheet" href="assets/styles.css?v=20260721-5">
   <script src="data.js"></script>
-  <script defer src="assets/app.js?v=20260717-3"></script>
+  <script defer src="assets/app.js?v=20260721-5"></script>
 </head>
 <body data-page="data">
   <header class="topbar">
@@ -28,24 +28,54 @@
       <header class="page-hero data-hero">
         <div class="eyebrow">DATA LAB</div>
         <h1 class="page-title">데이터 · 보조지표</h1>
-        <p class="page-copy">옵션 만기와 휴장 일정을 먼저 확인하고, 향후 RSI·시장 보조지표·해외 동향을 한곳에서 확장해 살펴보는 데이터 페이지입니다.</p>
+        <p class="page-copy">옵션 일정과 당일 RSI 다이버전스, 거래대금 급증 및 이동평균 배열 전환 종목을 한곳에서 확인합니다.</p>
       </header>
 
       <nav class="module-tabs" aria-label="데이터 모듈">
-        <button type="button" class="module-tab active"><span>옵션 캘린더</span><small>2026 Cboe</small></button>
-        <button type="button" class="module-tab planned" disabled><span>RSI</span><small>추가 예정</small></button>
-        <button type="button" class="module-tab planned" disabled><span>시장 보조지표</span><small>추가 예정</small></button>
+        <button type="button" class="module-tab active" data-data-module="options"><span>옵션 캘린더</span><small>2026 Cboe</small></button>
+        <button type="button" class="module-tab" data-data-module="rsi"><span>RSI</span><small id="rsi-tab-count">최신 스캔</small></button>
+        <button type="button" class="module-tab" data-data-module="market"><span>시장 보조지표</span><small id="market-tab-count">최신 스캔</small></button>
         <button type="button" class="module-tab planned" disabled><span>해외 동향</span><small>추가 예정</small></button>
       </nav>
 
+      <div data-module-panel="options">
       <section class="option-overview" aria-label="옵션 일정 요약">
         <article class="calendar-kpi accent"><span>선택 월</span><strong id="calendar-month-kpi">-</strong><small id="calendar-event-count">일정 확인 중</small></article>
         <article class="calendar-kpi"><span>다음 표준 만기</span><strong id="next-standard-date">-</strong><small id="next-standard-dday">-</small></article>
         <article class="calendar-kpi"><span>다음 VIX 만기</span><strong id="next-vix-date">-</strong><small id="next-vix-dday">-</small></article>
         <article class="calendar-kpi holiday"><span>다음 거래소 휴일</span><strong id="next-holiday-date">-</strong><small id="next-holiday-name">-</small></article>
       </section>
+      </div>
 
-      <section class="option-calendar-panel">
+      <section class="indicator-panel hidden" data-module-panel="rsi">
+        <div class="indicator-header">
+          <div><div class="calendar-kicker">RSI DIVERGENCE</div><h2>오늘의 RSI 다이버전스</h2><p>가격과 14일 RSI가 서로 반대 방향으로 움직이는 종목을 찾습니다.</p></div>
+          <div class="indicator-asof" id="rsi-asof">갱신 대기</div>
+        </div>
+        <div class="indicator-kpis">
+          <article class="indicator-kpi bullish"><span>상승 다이버전스</span><strong id="rsi-bullish-count">0</strong><small>가격 저점↓ · RSI 저점↑</small></article>
+          <article class="indicator-kpi bearish"><span>하락 다이버전스</span><strong id="rsi-bearish-count">0</strong><small>가격 고점↑ · RSI 고점↓</small></article>
+        </div>
+        <label class="indicator-search"><span>종목 검색</span><input id="rsi-indicator-search" type="search" placeholder="종목명 또는 종목코드"></label>
+        <div class="indicator-grid">
+          <section class="indicator-section"><div class="indicator-section-head"><div><h3>상승 다이버전스</h3><p>하락 압력이 약해지는지 확인하는 반전 후보군</p></div><span class="indicator-badge bullish" id="rsi-bullish-badge">0종목</span></div><div class="table-wrap"><table class="indicator-table"><thead><tr><th>#</th><th>종목</th><th>시장</th><th>현재가</th><th>등락률</th><th>현재 RSI</th><th>가격 비교</th><th>RSI 비교</th></tr></thead><tbody id="rsi-bullish-body"></tbody></table></div></section>
+          <section class="indicator-section"><div class="indicator-section-head"><div><h3>하락 다이버전스</h3><p>상승 탄력이 약해지는지 확인하는 경계 후보군</p></div><span class="indicator-badge bearish" id="rsi-bearish-badge">0종목</span></div><div class="table-wrap"><table class="indicator-table"><thead><tr><th>#</th><th>종목</th><th>시장</th><th>현재가</th><th>등락률</th><th>현재 RSI</th><th>가격 비교</th><th>RSI 비교</th></tr></thead><tbody id="rsi-bearish-body"></tbody></table></div></section>
+        </div>
+        <footer class="indicator-note">다이버전스는 반전 확정 신호가 아니라 후보 탐색 지표입니다. 거래량·추세·지지선을 함께 확인하세요.</footer>
+      </section>
+
+      <section class="indicator-panel hidden" data-module-panel="market">
+        <div class="indicator-header">
+          <div><div class="calendar-kicker">MARKET SCREENER</div><h2>시장 보조지표</h2><p>시총대비 거래대금 급증과 역배열에서 정배열로 전환한 종목을 찾습니다.</p></div>
+          <div class="indicator-asof" id="market-asof">갱신 대기</div>
+        </div>
+        <label class="indicator-search"><span>종목 검색</span><input id="market-indicator-search" type="search" placeholder="종목명 또는 종목코드"></label>
+        <section class="indicator-section wide"><div class="indicator-section-head"><div><h3>시총대비 거래대금 급증</h3><p>거래대금 100억 이상 · 시총대비 1% 이상 · 10일 평균 거래량의 1.5배 이상</p></div><span class="indicator-badge" id="turnover-badge">0종목</span></div><div class="table-wrap"><table class="indicator-table"><thead><tr><th>#</th><th>종목</th><th>시장</th><th>등락률</th><th>거래대금</th><th>시가총액</th><th>시총대비</th><th>거래량 배수</th></tr></thead><tbody id="turnover-body"></tbody></table></div></section>
+        <section class="indicator-section wide"><div class="indicator-section-head"><div><h3>역배열 → 정배열 전환</h3><p>최근 20거래일 내 역배열 이력 후 5일선 &gt; 10일선 &gt; 20일선으로 신규 진입</p></div><span class="indicator-badge" id="alignment-badge">0종목</span></div><div class="table-wrap"><table class="indicator-table"><thead><tr><th>#</th><th>종목</th><th>전환일</th><th>이전 역배열</th><th>현재가</th><th>등락률</th><th>5일선</th><th>10일선</th><th>20일선</th></tr></thead><tbody id="alignment-body"></tbody></table></div></section>
+        <footer class="indicator-note">시장 보조지표는 조건 검색 결과이며 투자 판단을 대신하지 않습니다.</footer>
+      </section>
+
+      <section class="option-calendar-panel" data-module-panel="options">
         <div class="calendar-toolbar">
           <div>
             <div class="calendar-kicker">CBOE OPTIONS · 2026</div>
