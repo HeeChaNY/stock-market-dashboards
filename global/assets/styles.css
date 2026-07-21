@@ -116,12 +116,14 @@ button, select { cursor: pointer; }
 .segmented { display: flex; align-items: center; gap: 5px; }
 .segmented + .segmented { padding-left: 9px; border-left: 1px solid #2a2a30; }
 .segmented button {
-  min-height: 34px;
+  min-height: 29px;
   border: 1px solid #24242b;
   border-radius: 999px;
-  padding: 7px 13px;
+  padding: 5px 10px;
   background: #141418;
   color: #777781;
+  font-size: 11px;
+  line-height: 1.15;
   white-space: nowrap;
 }
 .segmented button:hover { color: #c7c7cd; }
