@@ -207,7 +207,11 @@ button { -webkit-tap-highlight-color: transparent }
 .signal-card { position: relative; display: grid; gap: 14px; overflow: hidden }
 .signal-card::after { content: ""; position: absolute; left: 0; top: 17px; bottom: 17px; width: 2px; border-radius: 3px; background: linear-gradient(var(--accent), transparent) }
 .signal-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px }
+.signal-name-row { display: flex; min-width: 0; align-items: baseline; gap: 10px; flex-wrap: wrap }
 .signal-name { overflow: hidden; color: #f8faff; font-size: 17px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap }
+.signal-price { display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 6px; white-space: nowrap; font-variant-numeric: tabular-nums }
+.signal-price strong { color: #dce4f2; font-size: 12px; font-weight: 760 }
+.signal-price span { font-size: 11px; font-weight: 800 }
 .code { color: #66738a; font-size: 11px; font-weight: 550 }
 .badge { flex: 0 0 auto; max-width: 58%; padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: rgba(148,163,184,.08); color: #cbd4e4; font-size: 10px; font-weight: 780; text-align: center }
 .badge.buy { border-color: rgba(255,102,115,.15); background: rgba(255,102,115,.11); color: #ff99a1 }
@@ -513,6 +517,11 @@ button { -webkit-tap-highlight-color: transparent }
   .trend-title { font-size: 16px }
   .trend-content { padding: 0 10px 10px }
   .trend-content .card { margin-top: 10px }
+  .signal-name-row { gap: 7px }
+  .signal-name { font-size: 16px }
+  .signal-price { gap: 5px }
+  .signal-price strong { font-size: 11px }
+  .signal-price span { font-size: 10px }
   .signal-metrics, .streak-metrics, .joint-metrics { grid-template-columns: 1fr }
   .filter-panel { align-items: flex-start; flex-direction: column }
   .filter-divider { width: 100%; height: 1px; margin: 1px 0 }
