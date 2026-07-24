@@ -1,0 +1,73 @@
+name: Refresh global screener
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "이미 갱신된 날짜도 다시 조회"
+        required: false
+        type: boolean
+        default: false
+  schedule:
+    # 07:20 KST, Tuesday-Saturday (22:20 UTC, Monday-Friday).
+    - cron: "20 22 * * 1-5"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: market-data-publish
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      FORCE_REFRESH: ${{ github.event_name == 'workflow_dispatch' && inputs.force && '1' || '0' }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      ALLOWED_CHAT_IDS: ${{ secrets.ALLOWED_CHAT_IDS }}
+      HOSTED_GLOBAL_URL: ${{ secrets.HOSTED_GLOBAL_URL }}
+      HOSTED_GLOBAL_SYNC_TOKEN: ${{ secrets.HOSTED_GLOBAL_SYNC_TOKEN }}
+      HOSTED_GLOBAL_AUTH_TOKEN: ${{ secrets.HOSTED_GLOBAL_AUTH_TOKEN }}
+      PUBLIC_GLOBAL_URL: https://heechany.github.io/stock-market-dashboards/global/
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate automation
+        run: npm test
+      - name: Refresh global markets
+        run: npm run refresh:global
+      - name: Publish refreshed static data
+        run: |
+          if git diff --quiet -- global/global-data.js; then
+            echo "No global data change."
+            exit 0
+          fi
+          git config user.name "stock-dashboard-bot"
+          git config user.email "stock-dashboard-bot@users.noreply.github.com"
+          git add global/global-data.js
+          git commit -m "data: refresh global screener"
+          git push
+      - name: Prepare GitHub Pages artifact
+        run: |
+          mkdir -p site-dist
+          cp -R index.html .nojekyll dashboard global site-dist/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Notify failure
+        if: failure()
+        run: node automation/tools/notify_failure.mjs "글로벌 스크리너 자동 갱신"

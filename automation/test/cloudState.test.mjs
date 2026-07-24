@@ -1,0 +1,62 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  mergeDomesticSnapshot,
+  mergeEtfSnapshots,
+  parseAssignedJson,
+  serializeAssignedJson,
+} from "../src/cloudState.mjs";
+
+test("assigned JSON round-trips", () => {
+  const source = serializeAssignedJson("window.TEST_DATA", { ok: true, rows: [1, 2] });
+  assert.deepEqual(parseAssignedJson(source, "window.TEST_DATA"), { ok: true, rows: [1, 2] });
+});
+
+test("domestic snapshot replaces one date and preserves history", () => {
+  const existing = {
+    dates: ["20260723", "20260724"],
+    columns: [],
+    rows: [
+      ["20260724", "005930", "old", "유가", "전자", 1, 1],
+      ["20260723", "005930", "older", "유가", "전자", 1, 1],
+    ],
+  };
+  const records = Array.from({ length: 1_050 }, (_, index) => ({
+    code: String(index).padStart(6, "0"),
+    name: `종목${index}`,
+    market: index % 2 ? "유가" : "코스닥",
+    sector: "테스트",
+    closePrice: 1_000 + index,
+    marketCapWon: 1_000_000_000 + index,
+    tradingVolume: 100,
+    priceChangePct: 1,
+    flows: {
+      foreign: { absoluteWon: 10, quantity: 1 },
+      institution: { absoluteWon: -5, quantity: -1 },
+      pension: { absoluteWon: 2, quantity: 1 },
+    },
+  }));
+  const merged = mergeDomesticSnapshot(existing, { date: "20260724", records, failed: 0 });
+  assert.equal(merged.rows.filter((row) => row[0] === "20260724").length, 1_050);
+  assert.equal(merged.rows.filter((row) => row[0] === "20260723").length, 1);
+  assert.equal(merged.rows.some((row) => row[2] === "old"), false);
+  assert.equal(merged.automation.mode, "incremental-close");
+});
+
+test("ETF snapshot keeps only the latest 23 dates", () => {
+  const previous = Array.from({ length: 23 }, (_, index) => [
+    `202606${String(index + 1).padStart(2, "0")}`, "069500", "KODEX 200", "기타 국내", 1, 1, 1,
+  ]);
+  const snapshots = Array.from({ length: 110 }, (_, index) => ({
+    date: "20260724",
+    code: String(100000 + index),
+    name: `ETF${index}`,
+    category: "기타 국내",
+    listedShares: 10,
+    referencePrice: 1_000,
+    marketCapWon: 10_000,
+  }));
+  const merged = mergeEtfSnapshots(previous, snapshots);
+  assert.equal(new Set(merged.map((row) => row[0])).size, 23);
+  assert.equal(merged.filter((row) => row[0] === "20260724").length, 110);
+});
