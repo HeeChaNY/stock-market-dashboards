@@ -18,11 +18,15 @@
 
   async function init() {
     bindControls();
+    const embedded = window.GLOBAL_MARKET_DATA;
     try {
       const archive = await fetchJson("/api/global/dates");
       state.dates = Array.isArray(archive.dates) ? archive.dates : [];
+      if (embedded?.date && !state.dates.includes(embedded.date)) state.dates.unshift(embedded.date);
       const requested = new URLSearchParams(location.search).get("date");
-      const selected = state.dates.includes(requested) ? requested : archive.latest || requested;
+      const selected = state.dates.includes(requested)
+        ? requested
+        : [embedded?.date, archive.latest].filter(Boolean).sort().at(-1) || requested;
       populateDateSelect(selected);
       await loadDate(selected);
     } catch {
@@ -56,6 +60,17 @@
     select.disabled = true;
     document.body.classList.add("is-loading");
     try {
+      const embedded = window.GLOBAL_MARKET_DATA;
+      if (embedded?.generatedAt && embedded.date === date) {
+        state.data = embedded;
+        if (!state.dates.includes(date)) state.dates.unshift(date);
+        populateDateSelect(date);
+        const url = new URL(location.href);
+        url.searchParams.set("date", date);
+        history.replaceState(null, "", url);
+        renderAll();
+        return;
+      }
       const query = date ? `?date=${encodeURIComponent(date)}` : "";
       const payload = await fetchJson(`/api/global${query}`);
       if (!payload?.generatedAt) throw new Error("empty payload");

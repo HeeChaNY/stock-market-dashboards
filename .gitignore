@@ -1,0 +1,7 @@
+.env
+.env.hosted
+automation/output/
+data/
+node_modules/
+*.session
+*.sqlite3

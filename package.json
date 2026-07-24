@@ -1,0 +1,14 @@
+{
+  "name": "stock-market-dashboards",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test automation/test/*.test.mjs",
+    "refresh:dashboard": "node automation/tools/refresh_dashboard_cloud.mjs",
+    "refresh:global": "node automation/tools/refresh_global_cloud.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
