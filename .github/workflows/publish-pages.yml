@@ -1,0 +1,43 @@
+name: Publish dashboard pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - ".nojekyll"
+      - "dashboard/**"
+      - "!dashboard/data.js"
+      - "global/**"
+      - "!global/global-data.js"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: market-data-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare GitHub Pages artifact
+        run: |
+          mkdir -p site-dist
+          cp -R index.html .nojekyll dashboard global site-dist/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
