@@ -11,6 +11,8 @@ on:
   schedule:
     # 07:20 KST, Tuesday-Saturday (22:20 UTC, Monday-Friday).
     - cron: "20 22 * * 1-5"
+    # 09:20 KST retry, Tuesday-Saturday (00:20 UTC, Tuesday-Saturday).
+    - cron: "20 0 * * 2-6"
 
 permissions:
   contents: write

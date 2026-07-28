@@ -5,6 +5,7 @@ import { formatGlobalTelegram, refreshGlobalMarkets } from "../src/globalMarkets
 import { syncHostedGlobalMarkets } from "../src/hostedDashboard.mjs";
 import { TelegramClient } from "../src/telegram.mjs";
 import { parseAssignedJson, serializeAssignedJson } from "../src/cloudState.mjs";
+import { nonEmptyMessages } from "../src/messages.mjs";
 
 loadDotEnv();
 loadDotEnv(".env.hosted");
@@ -39,7 +40,11 @@ try {
 const publicUrl = config.publicGlobalUrl
   || hosted?.url
   || "https://heechany.github.io/stock-market-dashboards/global/";
-await sendTelegram(payload, publicUrl);
+try {
+  await sendTelegram(payload, publicUrl);
+} catch (error) {
+  console.warn(`Telegram notification skipped: ${error.message}`);
+}
 
 const result = {
   stage: "complete",
@@ -75,8 +80,9 @@ async function seedPreviousPayload() {
 async function sendTelegram(payload, url) {
   if (!config.telegramBotToken || !config.allowedChatIds.size) return;
   const telegram = new TelegramClient(config.telegramBotToken);
+  const messages = nonEmptyMessages(formatGlobalTelegram(payload));
   for (const chatId of config.allowedChatIds) {
-    for (const message of formatGlobalTelegram(payload)) {
+    for (const message of messages) {
       await telegram.sendMessage(chatId, message);
     }
     await telegram.sendMessage(chatId, `✅ 글로벌 스크리너 자동 갱신 완료 · ${payload.date}\n${url}`);

@@ -6,7 +6,7 @@
 ## Cloud automation
 
 - 국내 대시보드: 평일 18:30 KST 실행, 미완료 시 19:20 KST 재시도
-- 글로벌 스크리너: 화요일~토요일 07:20 KST 실행
+- 글로벌 스크리너: 화요일~토요일 07:20 KST 실행, 미완료 시 09:20 KST 재시도
 - GitHub Actions의 `workflow_dispatch`로 수동 재실행 가능
 - 국내 데이터는 최신 거래일만 기존 이력에 병합
 - 완료 시 정적 데이터, Sites API, Telegram 요약과 Excel을 함께 갱신
