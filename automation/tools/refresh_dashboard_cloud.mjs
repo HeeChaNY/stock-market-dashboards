@@ -11,6 +11,11 @@ import { syncHostedDashboard } from "../src/hostedDashboard.mjs";
 import { exportScanToExcel } from "../src/excelExporter.mjs";
 import { TelegramClient } from "../src/telegram.mjs";
 import {
+  formatDashboardCompleteMessage,
+  formatDashboardStartMessage,
+  nonEmptyMessages,
+} from "../src/messages.mjs";
+import {
   etfCategory,
   mergeDomesticSnapshot,
   mergeEtfSnapshots,
@@ -43,6 +48,7 @@ const date = await resolveLatestCompletedFlowDate(client, today, new Date(), { r
 const krxStocks = await loadKrxMaster(config.masterCacheFile);
 const kisShares = await ensureKisListedShares(config, date);
 const stocks = addKisPreferredShares(krxStocks, kisShares.entries);
+await sendTelegramStart(date, stocks.length);
 
 const scan = await scanWholeMarket({
   client,
@@ -83,7 +89,10 @@ try {
 const publicUrl = config.publicDashboardUrl
   || hosted?.url
   || "https://heechany.github.io/stock-market-dashboards/dashboard/";
-await sendTelegram(scan, excelPath, publicUrl);
+await sendTelegram(scan, excelPath, publicUrl, {
+  dates: merged.dates?.length || 0,
+  rows: merged.rows?.length || 0,
+});
 
 const result = {
   stage: "complete",
@@ -136,17 +145,47 @@ async function loadEtfSnapshots(dateValue, entries) {
   return fallback;
 }
 
-async function sendTelegram(scanValue, filePath, url) {
+async function sendTelegramStart(dateValue, total) {
+  if (!config.telegramBotToken || !config.allowedChatIds.size) return;
+  const telegram = new TelegramClient(config.telegramBotToken);
+  const message = formatDashboardStartMessage(dateValue, total);
+  for (const chatId of config.allowedChatIds) {
+    await safeTelegram(`start message to ${chatId}`, () => telegram.sendMessage(chatId, message));
+  }
+}
+
+async function sendTelegram(scanValue, filePath, url, history) {
   if (!config.telegramBotToken || !config.allowedChatIds.size) return;
   const telegram = new TelegramClient(config.telegramBotToken);
   for (const chatId of config.allowedChatIds) {
-    for (const message of formatFullReport(scanValue, config.topN)) {
-      await telegram.sendMessage(chatId, message);
+    for (const message of nonEmptyMessages(formatFullReport(scanValue, config.topN))) {
+      await safeTelegram(`summary message to ${chatId}`, () => telegram.sendMessage(chatId, message));
     }
+    let excelSent = false;
     if (existsSync(filePath)) {
-      await telegram.sendDocument(chatId, filePath, `수급정리-${scanValue.date}.xlsx`);
+      excelSent = await safeTelegram(
+        `Excel document to ${chatId}`,
+        () => telegram.sendDocument(chatId, filePath, `수급정리-${scanValue.date}.xlsx`),
+      );
     }
-    await telegram.sendMessage(chatId, `✅ 자동 대시보드 갱신 완료 · ${scanValue.date}\n${url}`);
+    const complete = formatDashboardCompleteMessage({
+      date: scanValue.date,
+      dates: history.dates,
+      rows: history.rows,
+      excelSent,
+      url,
+    });
+    await safeTelegram(`completion message to ${chatId}`, () => telegram.sendMessage(chatId, complete));
+  }
+}
+
+async function safeTelegram(label, action) {
+  try {
+    await action();
+    return true;
+  } catch (error) {
+    console.warn(`Telegram ${label} skipped: ${error.message}`);
+    return false;
   }
 }
 
