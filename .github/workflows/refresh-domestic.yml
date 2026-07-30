@@ -3,12 +3,23 @@ name: Refresh domestic dashboard
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: "갱신 모드"
+        required: true
+        type: choice
+        options:
+          - close
+          - intraday
+        default: close
       force:
         description: "이미 갱신된 날짜도 다시 조회"
         required: false
         type: boolean
         default: false
   schedule:
+    # Every 30 minutes from 09:00 through 15:00 KST on weekdays.
+    - cron: "0,30 0-5 * * 1-5"
+    - cron: "0 6 * * 1-5"
     # 18:30 and 19:20 KST, Monday-Friday. The second run is an idempotent retry.
     - cron: "30 9 * * 1-5"
     - cron: "20 10 * * 1-5"
@@ -49,6 +60,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Select refresh mode
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            mode="${{ inputs.mode }}"
+          elif [ "${{ github.event.schedule }}" = "30 9 * * 1-5" ] || [ "${{ github.event.schedule }}" = "20 10 * * 1-5" ]; then
+            mode="close"
+          else
+            mode="intraday"
+          fi
+          echo "RUN_MODE=$mode" >> "$GITHUB_ENV"
+          echo "Selected mode: $mode"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -62,6 +85,7 @@ jobs:
       - name: Refresh latest completed trading day
         run: npm run refresh:dashboard
       - name: Upload generated Excel
+        if: env.RUN_MODE == 'close'
         uses: actions/upload-artifact@v4
         with:
           name: domestic-flow-excel

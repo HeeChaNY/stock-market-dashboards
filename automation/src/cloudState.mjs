@@ -78,6 +78,56 @@ export function mergeDomesticSnapshot(existing, scan, { maxDates = 120 } = {}) {
   };
 }
 
+export function mergeIntradaySnapshot(existing, scan) {
+  if (!Array.isArray(scan?.records) || scan.records.length < 1000) {
+    throw new Error(`국내 장중 스캔 결과가 비정상적으로 적습니다: ${scan?.records?.length || 0}종목`);
+  }
+  const date = String(scan.date || "");
+  if (!isDate(date)) throw new Error(`국내 장중 스캔 기준일이 올바르지 않습니다: ${date}`);
+  const rows = scan.records.map((record) => {
+    const foreign = record.flows?.foreign || {};
+    const institution = record.flows?.institution || {};
+    return [
+      date,
+      String(record.code || ""),
+      String(record.name || record.code || ""),
+      String(record.market || ""),
+      String(record.sector || "미분류"),
+      numberOrZero(record.closePrice),
+      numberOrZero(record.marketCapWon),
+      nullableNumber(foreign.absoluteWon),
+      nullableNumber(foreign.quantity),
+      nullableNumber(institution.absoluteWon),
+      nullableNumber(institution.quantity),
+      null,
+      null,
+      nullableNumber(record.tradingVolume),
+      nullableNumber(record.priceChangePct),
+    ];
+  }).filter((row) => /^\d{6}$/.test(row[1]) && row[5] > 0);
+  if (rows.length < 1000) {
+    throw new Error(`병합 가능한 국내 장중 스캔 결과가 비정상적으로 적습니다: ${rows.length}종목`);
+  }
+  const updatedAt = new Date().toISOString();
+  return {
+    ...(existing || {}),
+    generatedAt: updatedAt,
+    liveSnapshot: {
+      date,
+      updatedAt,
+      mode: "intraday-estimate",
+      rows,
+    },
+    automation: {
+      source: "github-actions",
+      mode: "intraday-estimate",
+      updatedDate: date,
+      records: rows.length,
+      failed: numberOrZero(scan.failed),
+    },
+  };
+}
+
 export function mergeEtfSnapshots(existingRows, snapshots, { maxDates = 23 } = {}) {
   if (!Array.isArray(snapshots) || !snapshots.length) return Array.isArray(existingRows) ? existingRows : [];
   const date = String(snapshots[0]?.date || "");

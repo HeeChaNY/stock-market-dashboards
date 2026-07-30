@@ -1,10 +1,15 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { loadDotEnv, getConfig } from "../src/config.mjs";
 import { KisClient } from "../src/kisClient.mjs";
 import { addKisPreferredShares, loadKrxMaster } from "../src/krxMaster.mjs";
 import { ensureKisListedShares } from "../src/kisMaster.mjs";
-import { formatFullReport, resolveLatestCompletedFlowDate, scanWholeMarket } from "../src/flowService.mjs";
+import {
+  formatFullReport,
+  isKoreaMarketOpen,
+  resolveLatestCompletedFlowDate,
+  scanWholeMarket,
+} from "../src/flowService.mjs";
 import { refreshMarketRankings } from "../src/marketRankings.mjs";
 import { refreshTechnicalIndicators } from "../src/technicalIndicators.mjs";
 import { syncHostedDashboard } from "../src/hostedDashboard.mjs";
@@ -19,6 +24,7 @@ import {
   etfCategory,
   mergeDomesticSnapshot,
   mergeEtfSnapshots,
+  mergeIntradaySnapshot,
   parseAssignedJson,
   serializeAssignedJson,
 } from "../src/cloudState.mjs";
@@ -31,9 +37,10 @@ assertSecrets(config);
 const client = new KisClient(config);
 const today = koreaDateCompact();
 const force = process.env.FORCE_REFRESH === "1";
+const runMode = process.env.RUN_MODE === "intraday" ? "intraday" : "close";
 const existing = loadDashboard(config.dashboardDataFile);
 
-if (!force && existing.dates?.includes(today)) {
+if (runMode === "close" && !force && existing.dates?.includes(today)) {
   console.log(JSON.stringify({ stage: "skip", reason: "already-updated", date: today }));
   process.exit(0);
 }
@@ -44,11 +51,18 @@ if (!openDate) {
   process.exit(0);
 }
 
-const date = await resolveLatestCompletedFlowDate(client, today, new Date(), { requireRequestedDate: true });
+if (runMode === "intraday" && !isKoreaMarketOpen(new Date())) {
+  console.log(JSON.stringify({ stage: "skip", reason: "outside-market-hours", date: today }));
+  process.exit(0);
+}
+
+const date = runMode === "intraday"
+  ? today
+  : await resolveLatestCompletedFlowDate(client, today, new Date(), { requireRequestedDate: true });
 const krxStocks = await loadKrxMaster(config.masterCacheFile);
 const kisShares = await ensureKisListedShares(config, date);
 const stocks = addKisPreferredShares(krxStocks, kisShares.entries);
-await sendTelegramStart(date, stocks.length);
+if (runMode === "close") await sendTelegramStart(date, stocks.length);
 
 const scan = await scanWholeMarket({
   client,
@@ -57,7 +71,7 @@ const scan = await scanWholeMarket({
   config,
   persist: false,
   includeHistory: false,
-  mode: "close",
+  mode: runMode === "intraday" ? "intraday-estimate" : "close",
   onProgress({ completed, total, failed, retryPending = 0, retryRound = 0 }) {
     console.log(JSON.stringify({ stage: "scan", completed, total, failed, retryPending, retryRound }));
   },
@@ -67,17 +81,27 @@ if (scan.records.length < Math.max(2_000, Math.floor(stocks.length * 0.82))) {
   throw new Error(`완료 종목이 품질 기준보다 적어 기존 데이터를 유지합니다: ${scan.records.length}/${stocks.length}`);
 }
 
-const merged = mergeDomesticSnapshot(existing, scan);
-const etfSnapshots = await loadEtfSnapshots(date, kisShares.entries).catch((error) => {
-  console.warn(`ETF snapshot skipped: ${error.message}`);
-  return [];
-});
-merged.etfRows = mergeEtfSnapshots(existing.etfRows, etfSnapshots);
+const merged = runMode === "intraday"
+  ? mergeIntradaySnapshot(existing, scan)
+  : mergeDomesticSnapshot(existing, scan);
+const etfSnapshots = runMode === "close"
+  ? await loadEtfSnapshots(date, kisShares.entries).catch((error) => {
+    console.warn(`ETF snapshot skipped: ${error.message}`);
+    return [];
+  })
+  : [];
+if (runMode === "close") merged.etfRows = mergeEtfSnapshots(existing.etfRows, etfSnapshots);
 writeDashboard(config.dashboardDataFile, merged);
 
-const rankings = await refreshMarketRankings(client, config);
-const indicators = await refreshTechnicalIndicators(config);
+const rankings = runMode === "close"
+  ? await refreshMarketRankings(client, config)
+  : { skipped: true, reason: "intraday-refresh" };
+const indicators = runMode === "close"
+  ? await refreshTechnicalIndicators(config)
+  : { skipped: true, reason: "intraday-refresh" };
 const excelPath = await exportScanToExcel(scan, config);
+const latestExcelPath = resolve("./dashboard/latest-flow.xlsx");
+copyFileSync(excelPath, latestExcelPath);
 
 let hosted = null;
 try {
@@ -89,13 +113,16 @@ try {
 const publicUrl = config.publicDashboardUrl
   || hosted?.url
   || "https://heechany.github.io/stock-market-dashboards/dashboard/";
-await sendTelegram(scan, excelPath, publicUrl, {
-  dates: merged.dates?.length || 0,
-  rows: merged.rows?.length || 0,
-});
+if (runMode === "close") {
+  await sendTelegram(scan, excelPath, publicUrl, {
+    dates: merged.dates?.length || 0,
+    rows: merged.rows?.length || 0,
+  });
+}
 
 const result = {
   stage: "complete",
+  runMode,
   date,
   records: scan.records.length,
   failed: scan.failed,
@@ -105,6 +132,7 @@ const result = {
   indicators,
   hosted,
   excelPath,
+  latestExcelPath,
   publicUrl,
 };
 writeJson("./automation/output/dashboard-result.json", result);

@@ -435,8 +435,8 @@ export function formatFullReport(scan, topN) {
     : [["foreign", "외국인"], ["institution", "기관"], ["pension", "연기금등"]];
   const messages = [heading];
   for (const [key, label] of groups) {
-    messages.push(formatRankSection(valid, key, label, "absoluteWon", "절대금액", topN));
-    messages.push(formatRankSection(valid, key, label, "marketCapPct", "시총 대비", topN));
+    messages.push(...formatRankMessages(valid, key, label, "absoluteWon", "절대금액", topN));
+    messages.push(...formatRankMessages(valid, key, label, "marketCapPct", "시총 대비", topN));
   }
   return messages;
 }
@@ -445,9 +445,9 @@ export function formatOfficialQuickReport(scan, topN) {
   const valid = scan.records.filter((record) => record.marketCapWon > 0);
   return [
     `⚡ 확정 수급 빠른 요약 — ${scan.date}\n기준: 한투 종목별 일별 투자자 매매동향 · 전종목 스캔 완료본`,
-    formatRankSection(valid, "foreign", "외국인", "absoluteWon", "절대 순매수 금액", topN),
-    formatRankSection(valid, "institution", "기관", "absoluteWon", "절대 순매수 금액", topN),
-    formatRankSection(valid, "pension", "연기금등", "absoluteWon", "절대 순매수 금액", topN),
+    ...formatRankMessages(valid, "foreign", "외국인", "absoluteWon", "절대금액", topN),
+    ...formatRankMessages(valid, "institution", "기관", "absoluteWon", "절대금액", topN),
+    ...formatRankMessages(valid, "pension", "연기금등", "absoluteWon", "절대금액", topN),
   ];
 }
 
@@ -490,9 +490,9 @@ export function formatSingleStock(record) {
   return lines.join("\n");
 }
 
-function formatRankSection(records, flowKey, label, metric, title, topN) {
+function formatRankMessages(records, flowKey, label, metric, title, topN) {
   const sortBy = (direction) => [...records]
-    .filter((record) => Number.isFinite(record.flows[flowKey][metric]))
+    .filter((record) => Number.isFinite(record.flows?.[flowKey]?.[metric]))
     .sort((a, b) => direction * (b.flows[flowKey][metric] - a.flows[flowKey][metric]))
     .slice(0, topN);
   const render = (record, index) => {
@@ -502,7 +502,10 @@ function formatRankSection(records, flowKey, label, metric, title, topN) {
   };
   const buy = sortBy(1).map(render);
   const sell = sortBy(-1).map(render);
-  return [`📈 ${label} ${title} 순매수`, ...buy, "", `📉 ${label} ${title} 순매도`, ...sell].join("\n");
+  return [
+    [`📈 ${label} ${title} 순매수`, ...buy].join("\n"),
+    [`📉 ${label} ${title} 순매도`, ...sell].join("\n"),
+  ];
 }
 
 function selectDailyRow(rows, date) {

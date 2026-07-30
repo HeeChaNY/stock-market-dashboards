@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   mergeDomesticSnapshot,
   mergeEtfSnapshots,
+  mergeIntradaySnapshot,
   parseAssignedJson,
   serializeAssignedJson,
 } from "../src/cloudState.mjs";
@@ -41,6 +42,33 @@ test("domestic snapshot replaces one date and preserves history", () => {
   assert.equal(merged.rows.filter((row) => row[0] === "20260723").length, 1);
   assert.equal(merged.rows.some((row) => row[2] === "old"), false);
   assert.equal(merged.automation.mode, "incremental-close");
+});
+
+test("intraday snapshot updates only live rows and preserves close history", () => {
+  const existing = {
+    dates: ["20260729"],
+    rows: [["20260729", "005930", "삼성전자", "유가", "전자", 100, 1]],
+  };
+  const records = Array.from({ length: 1_050 }, (_, index) => ({
+    code: String(index).padStart(6, "0"),
+    name: `종목${index}`,
+    market: index % 2 ? "유가" : "코스닥",
+    sector: "테스트",
+    closePrice: 1_000 + index,
+    marketCapWon: 1_000_000_000 + index,
+    tradingVolume: 100,
+    priceChangePct: 1,
+    flows: {
+      foreign: { absoluteWon: 10, quantity: 1 },
+      institution: { absoluteWon: -5, quantity: -1 },
+    },
+  }));
+  const merged = mergeIntradaySnapshot(existing, { date: "20260730", records, failed: 2 });
+  assert.equal(merged.rows, existing.rows);
+  assert.equal(merged.liveSnapshot.rows.length, 1_050);
+  assert.equal(merged.liveSnapshot.mode, "intraday-estimate");
+  assert.equal(merged.automation.mode, "intraday-estimate");
+  assert.equal(merged.automation.failed, 2);
 });
 
 test("ETF snapshot keeps only the latest 23 dates", () => {
