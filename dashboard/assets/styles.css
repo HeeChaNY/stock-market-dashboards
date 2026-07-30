@@ -198,6 +198,22 @@ button { -webkit-tap-highlight-color: transparent }
 .market-price { position: relative; z-index: 1; margin-top: 12px; font-size: 24px; font-weight: 820; font-variant-numeric: tabular-nums; letter-spacing: -.02em }
 .delta { position: relative; z-index: 1; margin-top: 6px; font-size: 13px; font-weight: 750 }
 .market-meta { position: relative; z-index: 1; margin-top: 8px; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums }
+.investor-section { margin-top: 0 }
+.investor-section-head { align-items: center; margin-bottom: 10px }
+.investor-section-head h2 { font-size: 18px }
+.investor-eyebrow { margin-bottom: 4px; font-size: 9px }
+.investor-board { overflow: hidden; padding: 0; border-radius: 16px; background: linear-gradient(135deg, rgba(18,26,42,.9), rgba(10,15,26,.9)) }
+.investor-board:hover { border-color: var(--line); background: linear-gradient(135deg, rgba(18,26,42,.9), rgba(10,15,26,.9)); transform: none }
+.investor-row { display: grid; grid-template-columns: minmax(92px,1fr) repeat(3,minmax(92px,1fr)); min-height: 42px; padding: 0 17px; align-items: center; border-bottom: 1px solid rgba(148,163,184,.08); font-variant-numeric: tabular-nums }
+.investor-row:last-child { border-bottom: 0 }
+.investor-row > span { text-align: right }
+.investor-header { min-height: 34px; background: rgba(255,255,255,.018); color: #738097; font-size: 9px; font-weight: 800 }
+.investor-header > span:first-child { text-align: left }
+.investor-market { display: flex; align-items: baseline; gap: 7px; min-width: 0 }
+.investor-market strong { color: #dce4f2; font-size: 12px; font-weight: 780 }
+.investor-market small { color: #66738a; font-size: 9px; font-weight: 650 }
+.investor-value { font-size: 12px; font-weight: 780 }
+.investor-body > .empty { padding: 18px }
 .positive { color: var(--buy) !important }
 .negative { color: var(--sell) !important }
 .neutral { color: var(--muted) !important }
@@ -491,6 +507,13 @@ button { -webkit-tap-highlight-color: transparent }
   .page-copy { font-size: 14px; line-height: 1.65 }
   .section { margin-top: 28px }
   .section-head { align-items: flex-start; flex-direction: column; gap: 5px }
+  .investor-section { margin-top: 0 }
+  .investor-section-head { align-items: flex-start }
+  .investor-row { grid-template-columns: minmax(66px,.9fr) repeat(3,minmax(61px,1fr)); min-height: 40px; padding: 0 10px }
+  .investor-header { min-height: 32px }
+  .investor-market { gap: 4px }
+  .investor-market strong, .investor-value { font-size: 10.5px }
+  .investor-market small { display: none }
   .grid-4, .grid-3, .grid-2, .etf-grid, .etf-items-grid { grid-template-columns: 1fr }
   .module-tabs { grid-template-columns: 1fr 1fr }
   .module-tab { min-height: 58px; padding: 12px }

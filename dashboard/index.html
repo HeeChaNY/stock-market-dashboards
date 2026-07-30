@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>주식봇 — 국내주식 대시보드</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260722-1">
+    <link rel="stylesheet" href="assets/styles.css?v=20260730-1">
   <script src="data.js"></script>
-    <script defer src="assets/app.js?v=20260722-1"></script>
+    <script defer src="assets/app.js?v=20260730-1"></script>
 </head>
 <body data-page="home">
   <header class="topbar">
@@ -28,6 +28,23 @@
         <h1 class="page-title">주식봇</h1>
         <p class="page-copy">외국인·연기금의 연속 수급과 동반 움직임을 포착하고, 글로벌 시장 환경까지 한 화면에서 확인하세요.</p>
       </header>
+      <section class="section investor-section" aria-labelledby="investor-trends-title">
+        <div class="section-head investor-section-head">
+          <div>
+            <div class="eyebrow investor-eyebrow">Market Positioning</div>
+            <h2 id="investor-trends-title">투자자동향</h2>
+          </div>
+          <span id="investor-trends-note" class="section-note">현물: 억원 · 선물·옵션: 계약</span>
+        </div>
+        <div class="card investor-board">
+          <div class="investor-row investor-header" aria-hidden="true">
+            <span>구분</span><span>개인</span><span>외국인</span><span>기관</span>
+          </div>
+          <div id="investor-trends-grid" class="investor-body">
+            <div class="empty">투자자동향을 불러오는 중입니다.</div>
+          </div>
+        </div>
+      </section>
       <section class="section trend-section">
         <div class="section-head"><h2>특이동향</h2><span class="section-note">연속 수급은 3거래일 이상 · 매수 항목 우선</span></div>
         <div id="unusual-trends" class="accordion-list"></div>
