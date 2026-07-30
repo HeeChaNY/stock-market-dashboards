@@ -51,7 +51,9 @@ if (!openDate) {
   process.exit(0);
 }
 
-if (runMode === "intraday" && !isKoreaMarketOpen(new Date())) {
+const closingSnapshotGrace = process.env.CLOSING_SNAPSHOT === "1"
+  && isKoreaClosingSnapshotGrace(new Date());
+if (runMode === "intraday" && !isKoreaMarketOpen(new Date()) && !closingSnapshotGrace) {
   console.log(JSON.stringify({ stage: "skip", reason: "outside-market-hours", date: today }));
   process.exit(0);
 }
@@ -241,6 +243,19 @@ function koreaDateCompact(date = new Date()) {
     day: "2-digit",
   }).formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
   return `${parts.year}${parts.month}${parts.day}`;
+}
+
+function isKoreaClosingSnapshotGrace(date = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  if (["Sat", "Sun"].includes(parts.weekday)) return false;
+  const hhmm = (Number(parts.hour) * 100) + Number(parts.minute);
+  return hhmm >= 1530 && hhmm <= 1600;
 }
 
 function integer(value) {
