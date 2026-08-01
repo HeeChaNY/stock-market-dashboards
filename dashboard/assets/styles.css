@@ -313,6 +313,11 @@ button { -webkit-tap-highlight-color: transparent }
 .data-table tbody tr { transition: background .15s ease }
 .data-table tbody tr:nth-child(even) { background: rgba(255,255,255,.012) }
 .data-table tbody tr:hover { background: rgba(85,199,232,.045) }
+.stock-history-table { min-width: 980px }
+.short-balance-cell { color: #dce2ed !important }
+.short-balance-cell small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px }
+.short-balance-value { font-weight: 750 }
+.short-balance-empty { color: var(--muted) }
 .rank { width: 52px; color: #6f7b91 !important; font-weight: 750 }
 .data-table tbody tr:nth-child(-n+3) .rank { color: var(--yellow) !important }
 .empty { grid-column: 1 / -1; padding: 36px 24px; border: 1px dashed var(--line-strong); border-radius: 16px; background: rgba(17,24,39,.4); color: var(--muted); font-size: 13px; text-align: center }
@@ -379,6 +384,8 @@ button { -webkit-tap-highlight-color: transparent }
 .module-tab small { padding: 4px 7px; border-radius: 999px; background: rgba(148,163,184,.08); color: var(--muted); font-size: 9px; font-weight: 750; white-space: nowrap }
 .module-tab.active { border-color: rgba(85,199,232,.3); background: linear-gradient(135deg,rgba(85,199,232,.13),rgba(14,20,33,.86)); box-shadow: inset 3px 0 var(--cyan) }
 .module-tab.active small { background: rgba(85,199,232,.12); color: #8cdef4 }
+.module-tab.module-link { text-decoration: none; cursor: pointer }
+.module-tab.module-link:hover { border-color: rgba(85,199,232,.3); background: linear-gradient(135deg,rgba(85,199,232,.11),rgba(14,20,33,.86)) }
 .module-tab.planned { opacity: .52 }
 .option-overview { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-bottom: 18px }
 .calendar-kpi { position: relative; overflow: hidden; min-height: 120px; padding: 20px; border: 1px solid var(--line); border-radius: 17px; background: linear-gradient(145deg,rgba(20,27,43,.88),rgba(11,16,27,.9)) }

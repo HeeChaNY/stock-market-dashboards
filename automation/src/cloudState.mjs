@@ -153,6 +153,18 @@ export function mergeEtfSnapshots(existingRows, snapshots, { maxDates = 23 } = {
   ].sort((a, b) => String(b[0]).localeCompare(String(a[0])) || String(a[3]).localeCompare(String(b[3])) || numberOrZero(b[6]) - numberOrZero(a[6]));
 }
 
+export function mergeShortBalanceSnapshots(existing, snapshots, { maxDates = 120 } = {}) {
+  const previousDates = Array.isArray(existing?.shortBalanceDates) ? existing.shortBalanceDates.map(String) : [];
+  const validSnapshots = (Array.isArray(snapshots) ? snapshots : []).filter((snapshot) => isDate(snapshot?.date) && Array.isArray(snapshot?.rows) && numberOrZero(snapshot?.totalRecords) >= 1_000);
+  if (!validSnapshots.length) return { dates: previousDates, rows: Array.isArray(existing?.shortBalanceRows) ? existing.shortBalanceRows : [] };
+  const replacedDates = new Set(validSnapshots.map((snapshot) => String(snapshot.date)));
+  const dates = [...new Set([...previousDates, ...replacedDates])].sort().slice(-maxDates), keep = new Set(dates);
+  const rows = [...validSnapshots.flatMap((snapshot) => snapshot.rows), ...(Array.isArray(existing?.shortBalanceRows) ? existing.shortBalanceRows : []).filter((row) => !replacedDates.has(String(row?.[0])) && keep.has(String(row?.[0])))]
+    .filter((row) => keep.has(String(row?.[0])) && /^\d{6}$/.test(String(row?.[1] || "")))
+    .sort((a, b) => String(b[0]).localeCompare(String(a[0])) || String(a[1]).localeCompare(String(b[1])));
+  return { dates, rows };
+}
+
 export function etfCategory(name) {
   const rules = [
     ["반도체", ["반도체"]],

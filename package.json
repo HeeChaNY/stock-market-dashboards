@@ -5,10 +5,14 @@
   "type": "module",
   "scripts": {
     "test": "node --test automation/test/*.test.mjs",
+    "backfill:short": "node automation/tools/backfill_krx_short_balance.mjs",
     "refresh:dashboard": "node automation/tools/refresh_dashboard_cloud.mjs",
     "refresh:global": "node automation/tools/refresh_global_cloud.mjs"
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "playwright": "1.61.1"
   }
 }
