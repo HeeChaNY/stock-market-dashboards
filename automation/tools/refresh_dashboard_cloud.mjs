@@ -15,6 +15,7 @@ import { refreshTechnicalIndicators } from "../src/technicalIndicators.mjs";
 import { syncHostedDashboard } from "../src/hostedDashboard.mjs";
 import { exportScanToExcel } from "../src/excelExporter.mjs";
 import { TelegramClient } from "../src/telegram.mjs";
+import { fetchKrxShortBalanceSnapshots } from "../src/krxShortBalance.mjs";
 import {
   formatDashboardCompleteMessage,
   formatDashboardStartMessage,
@@ -25,6 +26,7 @@ import {
   mergeDomesticSnapshot,
   mergeEtfSnapshots,
   mergeIntradaySnapshot,
+  mergeShortBalanceSnapshots,
   parseAssignedJson,
   serializeAssignedJson,
 } from "../src/cloudState.mjs";
@@ -92,7 +94,21 @@ const etfSnapshots = runMode === "close"
     return [];
   })
   : [];
-if (runMode === "close") merged.etfRows = mergeEtfSnapshots(existing.etfRows, etfSnapshots);
+if (runMode === "close") {
+  merged.etfRows = mergeEtfSnapshots(existing.etfRows, etfSnapshots);
+  const shortBalances = await fetchKrxShortBalanceSnapshots({
+    candidateDates: merged.dates,
+    knownDates: existing.shortBalanceDates,
+    maxBackfillDates: Number(process.env.KRX_SHORT_BALANCE_BACKFILL_DATES || 31),
+  }).catch((error) => {
+    console.warn(`KRX short balance skipped: ${error.message}`);
+    return { latestAvailableDate: null, snapshots: [] };
+  });
+  const mergedShortBalances = mergeShortBalanceSnapshots(existing, shortBalances.snapshots);
+  merged.shortBalanceDates = mergedShortBalances.dates;
+  merged.shortBalanceRows = mergedShortBalances.rows;
+  merged.shortBalanceLatestAvailableDate = shortBalances.latestAvailableDate || existing.shortBalanceLatestAvailableDate || null;
+}
 writeDashboard(config.dashboardDataFile, merged);
 
 const rankings = runMode === "close"
@@ -130,6 +146,8 @@ const result = {
   failed: scan.failed,
   durationMs: scan.durationMs,
   etfRows: etfSnapshots.length,
+  shortBalanceDates: runMode === "close" ? merged.shortBalanceDates?.length || 0 : 0,
+  shortBalanceLatestAvailableDate: merged.shortBalanceLatestAvailableDate || null,
   rankings,
   indicators,
   hosted,

@@ -4,6 +4,7 @@ import {
   mergeDomesticSnapshot,
   mergeEtfSnapshots,
   mergeIntradaySnapshot,
+  mergeShortBalanceSnapshots,
   parseAssignedJson,
   serializeAssignedJson,
 } from "../src/cloudState.mjs";
@@ -87,4 +88,19 @@ test("ETF snapshot keeps only the latest 23 dates", () => {
   const merged = mergeEtfSnapshots(previous, snapshots);
   assert.equal(new Set(merged.map((row) => row[0])).size, 23);
   assert.equal(merged.filter((row) => row[0] === "20260724").length, 110);
+});
+
+test("short balance snapshots replace exact dates and preserve availability", () => {
+  const existing = {
+    shortBalanceDates: ["20260728"],
+    shortBalanceRows: [["20260728", "005930", 10, 1_000, 0.01]],
+  };
+  const merged = mergeShortBalanceSnapshots(existing, [{
+    date: "20260729",
+    totalRecords: 2_600,
+    rows: [["20260729", "005930", 20, 2_000, 0.02]],
+  }]);
+  assert.deepEqual(merged.dates, ["20260728", "20260729"]);
+  assert.equal(merged.rows.length, 2);
+  assert.deepEqual(merged.rows[0], ["20260729", "005930", 20, 2_000, 0.02]);
 });

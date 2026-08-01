@@ -313,6 +313,11 @@ button { -webkit-tap-highlight-color: transparent }
 .data-table tbody tr { transition: background .15s ease }
 .data-table tbody tr:nth-child(even) { background: rgba(255,255,255,.012) }
 .data-table tbody tr:hover { background: rgba(85,199,232,.045) }
+.stock-history-table { min-width: 980px }
+.short-balance-cell { color: #dce2ed !important }
+.short-balance-cell small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px }
+.short-balance-value { font-weight: 750 }
+.short-balance-empty { color: var(--muted) }
 .rank { width: 52px; color: #6f7b91 !important; font-weight: 750 }
 .data-table tbody tr:nth-child(-n+3) .rank { color: var(--yellow) !important }
 .empty { grid-column: 1 / -1; padding: 36px 24px; border: 1px dashed var(--line-strong); border-radius: 16px; background: rgba(17,24,39,.4); color: var(--muted); font-size: 13px; text-align: center }
