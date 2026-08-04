@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   formatDashboardCompleteMessage,
   formatDashboardStartMessage,
+  formatIntradayDashboardCompleteMessage,
   nonEmptyMessages,
 } from "../src/messages.mjs";
 import { formatFullReport } from "../src/flowService.mjs";
@@ -40,6 +41,21 @@ test("dashboard completion includes history, Excel status, and public link", () 
   assert.match(message, /31거래일 · 80,578건 저장/);
   assert.match(message, /Excel 파일도 전송했습니다/);
   assert.match(message, /https:\/\/example\.test\/dashboard\//);
+});
+
+test("intraday cloud completion is concise and includes the public link", () => {
+  const message = formatIntradayDashboardCompleteMessage({
+    date: "20260804",
+    records: 2687,
+    failed: 3,
+    url: "https://example.test/dashboard/",
+    completedAt: "2026-08-04T05:30:00.000Z",
+  });
+  assert.match(message, /장중 클라우드 대시보드 갱신 완료/);
+  assert.match(message, /20260804 14:30 KST/);
+  assert.match(message, /2,687종목 · 실패 3종목/);
+  assert.match(message, /https:\/\/example\.test\/dashboard\//);
+  assert.doesNotMatch(message, /Excel/);
 });
 
 test("buy and sell rankings are sent as separate Telegram messages", () => {

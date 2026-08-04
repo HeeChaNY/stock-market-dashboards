@@ -23,3 +23,20 @@ export function formatDashboardCompleteMessage({ date, dates, rows, excelSent, u
     String(url || "").trim(),
   ].filter(Boolean).join("\n");
 }
+
+export function formatIntradayDashboardCompleteMessage({ date, records, failed, url, completedAt = new Date() }) {
+  const time = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(completedAt));
+  return [
+    "✅ 장중 클라우드 대시보드 갱신 완료",
+    `기준: ${date} ${time} KST`,
+    `반영: ${Number(records || 0).toLocaleString()}종목${Number(failed || 0) > 0 ? ` · 실패 ${Number(failed).toLocaleString()}종목` : ""}`,
+    "",
+    "📊 대시보드 열기",
+    String(url || "").trim(),
+  ].filter(Boolean).join("\n");
+}

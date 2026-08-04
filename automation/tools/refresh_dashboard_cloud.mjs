@@ -19,6 +19,7 @@ import { fetchKrxShortBalanceSnapshots } from "../src/krxShortBalance.mjs";
 import {
   formatDashboardCompleteMessage,
   formatDashboardStartMessage,
+  formatIntradayDashboardCompleteMessage,
   nonEmptyMessages,
 } from "../src/messages.mjs";
 import {
@@ -136,6 +137,8 @@ if (runMode === "close") {
     dates: merged.dates?.length || 0,
     rows: merged.rows?.length || 0,
   });
+} else {
+  await sendIntradayTelegramComplete(scan, publicUrl);
 }
 
 const result = {
@@ -224,6 +227,20 @@ async function sendTelegram(scanValue, filePath, url, history) {
       url,
     });
     await safeTelegram(`completion message to ${chatId}`, () => telegram.sendMessage(chatId, complete));
+  }
+}
+
+async function sendIntradayTelegramComplete(scanValue, url) {
+  if (!config.telegramBotToken || !config.allowedChatIds.size) return;
+  const telegram = new TelegramClient(config.telegramBotToken);
+  const message = formatIntradayDashboardCompleteMessage({
+    date: scanValue.date,
+    records: scanValue.records.length,
+    failed: scanValue.failed,
+    url,
+  });
+  for (const chatId of config.allowedChatIds) {
+    await safeTelegram(`intraday completion message to ${chatId}`, () => telegram.sendMessage(chatId, message));
   }
 }
 
