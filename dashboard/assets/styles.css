@@ -319,7 +319,15 @@ button { -webkit-tap-highlight-color: transparent }
 .data-table tbody tr { transition: background .15s ease }
 .data-table tbody tr:nth-child(even) { background: rgba(255,255,255,.012) }
 .data-table tbody tr:hover { background: rgba(85,199,232,.045) }
-.stock-history-table { min-width: 980px }
+.stock-history-table { min-width: 1120px; table-layout: fixed }
+.stock-history-table th:nth-child(1), .stock-history-table td:nth-child(1) { width: 82px }
+.stock-history-table th:nth-child(2), .stock-history-table td:nth-child(2) { width: 112px }
+.stock-history-table th:nth-child(3), .stock-history-table td:nth-child(3),
+.stock-history-table th:nth-child(4), .stock-history-table td:nth-child(4),
+.stock-history-table th:nth-child(5), .stock-history-table td:nth-child(5) { width: 132px }
+.stock-history-table th:nth-child(6), .stock-history-table td:nth-child(6),
+.stock-history-table th:nth-child(7), .stock-history-table td:nth-child(7),
+.stock-history-table th:nth-child(8), .stock-history-table td:nth-child(8) { width: 158px }
 .short-balance-cell { color: #dce2ed !important }
 .short-balance-cell small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px }
 .short-balance-value { font-weight: 750 }
