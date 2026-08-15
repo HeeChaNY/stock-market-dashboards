@@ -440,6 +440,11 @@ button { -webkit-tap-highlight-color: transparent }
 .day-events { display: grid; gap: 4px; margin-top: 7px }
 .calendar-event { overflow: hidden; padding: 4px 6px; border: 1px solid transparent; border-radius: 6px; color: #e7ecf5; font-size: 8px; font-weight: 750; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap }
 .calendar-event.navy { border-color: rgba(95,126,207,.34); background: rgba(56,77,139,.42) }
+.calendar-event.orange { border-color: rgba(255,142,72,.34); background: rgba(255,142,72,.15); color: #ffb27f }
+.calendar-event.blue { border-color: rgba(77,141,255,.34); background: rgba(77,141,255,.14); color: #91b8ff }
+.calendar-event.teal { border-color: rgba(45,196,180,.32); background: rgba(45,196,180,.13); color: #78ddd2 }
+.calendar-event.rose { border-color: rgba(242,112,156,.32); background: rgba(242,112,156,.14); color: #f5a2be }
+.calendar-event.lime { border-color: rgba(157,211,91,.32); background: rgba(157,211,91,.13); color: #c0e48e }
 .calendar-event.green { border-color: rgba(66,213,155,.26); background: rgba(66,213,155,.13); color: #83e5bd }
 .calendar-event.cyan { border-color: rgba(85,199,232,.28); background: rgba(85,199,232,.13); color: #8cdef4 }
 .calendar-event.magenta { border-color: rgba(222,77,168,.28); background: rgba(222,77,168,.15); color: #f097cf }
@@ -457,7 +462,7 @@ button { -webkit-tap-highlight-color: transparent }
 .month-event strong { display: block; overflow: hidden; color: #dfe5ef; font-size: 11px; text-overflow: ellipsis; white-space: nowrap }
 .month-event small { display: block; margin-top: 4px; color: #738097; font-size: 9px; font-variant-numeric: tabular-nums }
 .event-dot { display: inline-block; width: 7px; height: 7px; margin-top: 3px; border-radius: 2px; background: #657aa9; box-shadow: 0 0 0 3px rgba(101,122,169,.08) }
-.event-dot.green { background: #42d59b }.event-dot.cyan { background: #55c7e8 }.event-dot.magenta { background: #de4da8 }.event-dot.pink { background: #cf94be }.event-dot.violet { background: #9380c7 }.event-dot.purple { background: #7660bb }.event-dot.yellow { background: #f4ca64 }.event-dot.deep-purple { background: #8342aa }
+.event-dot.orange { background: #ff8e48 }.event-dot.blue { background: #4d8dff }.event-dot.teal { background: #2dc4b4 }.event-dot.rose { background: #f2709c }.event-dot.lime { background: #9dd35b }.event-dot.green { background: #42d59b }.event-dot.cyan { background: #55c7e8 }.event-dot.magenta { background: #de4da8 }.event-dot.pink { background: #cf94be }.event-dot.violet { background: #9380c7 }.event-dot.purple { background: #7660bb }.event-dot.yellow { background: #f4ca64 }.event-dot.deep-purple { background: #8342aa }
 .calendar-legend-section { padding-top: 22px; border-top: 1px solid var(--line) }
 .calendar-legend { display: grid; gap: 9px; margin-top: 13px }
 .calendar-legend > span { display: flex; gap: 9px; align-items: center; color: #8e9aaf; font-size: 9px; line-height: 1.35 }

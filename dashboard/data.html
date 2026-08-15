@@ -32,7 +32,7 @@
       </header>
 
       <nav class="module-tabs" aria-label="데이터 모듈">
-        <button type="button" class="module-tab active" data-data-module="options"><span>옵션 캘린더</span><small>2026 Cboe</small></button>
+        <button type="button" class="module-tab active" data-data-module="options"><span>옵션·지수 캘린더</span><small>2026 Cboe·KRX·MSCI</small></button>
         <button type="button" class="module-tab" data-data-module="rsi"><span>RSI</span><small id="rsi-tab-count">최신 스캔</small></button>
         <button type="button" class="module-tab" data-data-module="market"><span>시장 보조지표</span><small id="market-tab-count">최신 스캔</small></button>
         <a class="module-tab module-link" href="../global/"><span>해외 동향</span><small>글로벌 마켓 스캐너 ↗</small></a>
@@ -41,7 +41,7 @@
       <div data-module-panel="options">
       <section class="option-overview" aria-label="옵션 일정 요약">
         <article class="calendar-kpi accent"><span>선택 월</span><strong id="calendar-month-kpi">-</strong><small id="calendar-event-count">일정 확인 중</small></article>
-        <article class="calendar-kpi"><span>다음 표준 만기</span><strong id="next-standard-date">-</strong><small id="next-standard-dday">-</small></article>
+        <article class="calendar-kpi"><span>다음 미국 표준만기</span><strong id="next-standard-date">-</strong><small id="next-standard-dday">-</small></article>
         <article class="calendar-kpi"><span>다음 VIX 만기</span><strong id="next-vix-date">-</strong><small id="next-vix-dday">-</small></article>
         <article class="calendar-kpi holiday"><span>다음 거래소 휴일</span><strong id="next-holiday-date">-</strong><small id="next-holiday-name">-</small></article>
       </section>
@@ -78,8 +78,8 @@
       <section class="option-calendar-panel" data-module-panel="options">
         <div class="calendar-toolbar">
           <div>
-            <div class="calendar-kicker">CBOE OPTIONS · 2026</div>
-            <h2 id="calendar-title">2026년 옵션 만기 캘린더</h2>
+            <div class="calendar-kicker">CBOE OPTIONS · KRX · MSCI · 2026</div>
+            <h2 id="calendar-title">2026년 옵션·지수 일정 캘린더</h2>
           </div>
           <div class="calendar-nav" aria-label="월 이동">
             <button id="calendar-prev" type="button" aria-label="이전 달">‹</button>
@@ -109,10 +109,14 @@
 
         <div class="recurring-note">
           <strong>반복 만기 안내</strong>
+          <span>미국 표준만기는 Cboe 주식·ETF·지수 옵션의 대표 월물 만기인 매월 세 번째 금요일입니다.</span>
+          <span>KRX 코스피200·코스닥150 월물 옵션은 통상 매월 두 번째 목요일 만기이며, 휴장일이면 앞당겨집니다.</span>
+          <span>KRX 지수 정기변경 발표·적용 일정은 거래소가 공식 확인한 날짜만 표시합니다.</span>
+          <span>MSCI 발표일은 한국시간, 적용 일정은 리밸런싱 거래가 집중되는 전 영업일 종가 기준입니다.</span>
           <span>VIX Weeklys는 통상 수요일 만기입니다.</span>
           <span>SPX·XSP Weeklys는 표준 3번째 금요일, 월말·분기말 만기와 겹치는 날을 제외한 영업일마다 만기됩니다.</span>
         </div>
-        <footer class="calendar-source">Cboe 2026 Options Expiration Calendar 기준 · 일정은 거래소 사정에 따라 변경될 수 있습니다.</footer>
+        <footer class="calendar-source">Cboe 2026 Options Expiration Calendar · 삼성선물 2026 Trading Calendar · KRX 지수 공지·방법론 · MSCI 2026 Index Review 일정 · 일정은 산출기관 사정에 따라 변경될 수 있습니다.</footer>
       </section>
     </main>
   </div>
