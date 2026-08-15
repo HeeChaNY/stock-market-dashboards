@@ -115,7 +115,7 @@ const optionEventTypes={
   vixLast:{label:"VIX 옵션 최종 거래일",short:"VIX 최종거래",tone:"cyan"},
   vix:{label:"VIX 표준 만기",short:"VIX 만기",tone:"magenta"},
   vixWeekly:{label:"VIX Weeklys 만기",short:"VIX W",tone:"pink"},
-  eom:{label:"월말 옵션 만기",short:"월말 만기",tone:"violet"},
+  eom:{label:"월말 옵션 만기",short:"월말 옵션만기",tone:"violet"},
   quarter:{label:"분기말 옵션 만기",short:"분기말 만기",tone:"purple"},
   holiday:{label:"Cboe 거래소 휴일",short:"휴장",tone:"yellow"},
   leaps:{label:"2029 주식·ETP LEAPS 추가",short:"LEAPS 추가",tone:"deep-purple"},

@@ -26,8 +26,10 @@ test("options calendar includes confirmed 2026 KRX and MSCI schedules", async ()
     assert.match(app, new RegExp(`${date}[^\\n]+msciEffective`));
   }
   assert.match(app, /미국\(Cboe\) 표준 옵션 만기/);
+  assert.match(app, /eom:\{label:"월말 옵션 만기",short:"월말 옵션만기"/);
   assert.match(html, /2026 Cboe·KRX·MSCI/);
   assert.match(styles, /\.calendar-event\.orange/);
   assert.match(styles, /\.calendar-event\.rose/);
   assert.match(styles, /\.calendar-event\.lime/);
+  assert.match(styles, /\.calendar-event \{[^}]*font-size: 10px/);
 });
