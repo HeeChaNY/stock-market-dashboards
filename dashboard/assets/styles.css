@@ -438,7 +438,7 @@ button { -webkit-tap-highlight-color: transparent }
 .day-number { display: flex; min-height: 22px; align-items: center; justify-content: space-between; color: #dce3ee; font-size: 12px; font-weight: 780; font-variant-numeric: tabular-nums }
 .day-number i { padding: 3px 6px; border-radius: 999px; background: rgba(85,199,232,.14); color: #8cdff4; font-size: 8px; font-style: normal }
 .day-events { display: grid; gap: 4px; margin-top: 7px }
-.calendar-event { overflow: hidden; padding: 4px 6px; border: 1px solid transparent; border-radius: 6px; color: #e7ecf5; font-size: 8px; font-weight: 750; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap }
+.calendar-event { overflow: hidden; padding: 4px 6px; border: 1px solid transparent; border-radius: 6px; color: #e7ecf5; font-size: 10px; font-weight: 750; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap }
 .calendar-event.navy { border-color: rgba(95,126,207,.34); background: rgba(56,77,139,.42) }
 .calendar-event.orange { border-color: rgba(255,142,72,.34); background: rgba(255,142,72,.15); color: #ffb27f }
 .calendar-event.blue { border-color: rgba(77,141,255,.34); background: rgba(77,141,255,.14); color: #91b8ff }
