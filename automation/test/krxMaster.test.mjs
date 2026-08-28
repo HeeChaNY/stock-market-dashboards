@@ -44,6 +44,21 @@ test("KRX가 계속 차단되면 14일 이내 직전 정상 캐시를 사용한�
   assert.deepEqual(result, stocks);
 });
 
+test("실행 캐시가 없어도 최근 게시 대시보드의 종목 목록으로 복구한다", async () => {
+  const cacheFile = join(mkdtempSync(join(tmpdir(), "krx-master-")), "master.json");
+  const publishedStocks = validMasterStocks();
+
+  const result = await loadKrxMaster(cacheFile, {
+    fetchImpl: async () => response(403, "Forbidden"),
+    retryDelaysMs: [0],
+    sleepImpl: async () => {},
+    logger: silentLogger,
+    fallbackCache: { updatedDate: koreaDateDaysAgo(1).replaceAll("-", ""), stocks: publishedStocks },
+  });
+
+  assert.deepEqual(result, publishedStocks);
+});
+
 test("유효기간이 지난 캐시는 KRX 실패를 성공으로 숨기지 않는다", async () => {
   const cacheFile = join(mkdtempSync(join(tmpdir(), "krx-master-")), "master.json");
   writeFileSync(cacheFile, JSON.stringify({ updatedDate: koreaDateDaysAgo(30), stocks: validMasterStocks() }), "utf8");
