@@ -64,7 +64,9 @@ if (runMode === "intraday" && !isKoreaMarketOpen(new Date()) && !closingSnapshot
 const date = runMode === "intraday"
   ? today
   : await resolveLatestCompletedFlowDate(client, today, new Date(), { requireRequestedDate: true });
-const krxStocks = await loadKrxMaster(config.masterCacheFile);
+const krxStocks = await loadKrxMaster(config.masterCacheFile, {
+  fallbackCache: publishedMasterFallback(existing),
+});
 const kisShares = await ensureKisListedShares(config, date);
 const stocks = addKisPreferredShares(krxStocks, kisShares.entries);
 if (runMode === "close") await sendTelegramStart(date, stocks.length);
@@ -256,6 +258,24 @@ async function safeTelegram(label, action) {
 
 function loadDashboard(path) {
   return parseAssignedJson(readFileSync(resolve(path), "utf8"), "window.FLOW_DASHBOARD_DATA");
+}
+
+function publishedMasterFallback(payload) {
+  const columns = Array.isArray(payload?.columns) ? payload.columns : [];
+  const indexes = Object.fromEntries(["date", "code", "name", "market", "sector"].map((name) => [name, columns.indexOf(name)]));
+  if (Object.values(indexes).some((index) => index < 0)) return null;
+  const latestDate = [...(payload.dates || [])].map(String).sort().at(-1);
+  if (!/^\d{8}$/.test(latestDate || "")) return null;
+  const stocks = (payload.rows || [])
+    .filter((row) => String(row[indexes.date]) === latestDate)
+    .map((row) => ({
+      code: String(row[indexes.code] || ""),
+      name: String(row[indexes.name] || ""),
+      market: String(row[indexes.market] || ""),
+      sector: String(row[indexes.sector] || "미분류"),
+    }))
+    .filter((stock) => /^\d{6}$/.test(stock.code) && stock.name && /유가|코스닥/.test(stock.market));
+  return { updatedDate: latestDate, stocks };
 }
 
 function writeDashboard(path, payload) {

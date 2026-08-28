@@ -32,9 +32,12 @@ export async function loadKrxMaster(cacheFile, options = {}) {
   }
 
   const staleCacheDays = options.staleCacheDays ?? DEFAULT_STALE_CACHE_DAYS;
-  if (isUsableStaleCache(cached, staleCacheDays)) {
-    logger.warn(`KRX 종목 목록 요청이 계속 실패해 직전 정상 캐시(${cached.updatedDate})를 사용합니다: ${lastError?.message}`);
-    return cached.stocks;
+  const fallback = [cached, options.fallbackCache]
+    .filter((candidate) => isUsableStaleCache(candidate, staleCacheDays))
+    .sort((left, right) => normalizeDate(right.updatedDate).localeCompare(normalizeDate(left.updatedDate)))[0];
+  if (fallback) {
+    logger.warn(`KRX 종목 목록 요청이 계속 실패해 직전 정상 목록(${fallback.updatedDate})을 사용합니다: ${lastError?.message}`);
+    return fallback.stocks;
   }
   throw new Error(`KRX 종목 목록 요청 실패(총 ${attempts}회): ${lastError?.message || "알 수 없는 오류"}`);
 }
@@ -113,11 +116,17 @@ function isValidMaster(stocks) {
 
 function isUsableStaleCache(cached, maximumAgeDays) {
   if (!isValidMaster(cached?.stocks)) return false;
-  const updated = Date.parse(`${cached.updatedDate}T00:00:00+09:00`);
+  const normalizedDate = normalizeDate(cached.updatedDate);
+  const updated = Date.parse(`${normalizedDate}T00:00:00+09:00`);
   const today = Date.parse(`${koreaDate()}T00:00:00+09:00`);
   if (!Number.isFinite(updated) || !Number.isFinite(today)) return false;
   const ageDays = Math.floor((today - updated) / 86_400_000);
   return ageDays >= 0 && ageDays <= maximumAgeDays;
+}
+
+function normalizeDate(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits.length === 8 ? `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}` : "";
 }
 
 function sleep(milliseconds) {
