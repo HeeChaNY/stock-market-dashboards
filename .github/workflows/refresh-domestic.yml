@@ -61,6 +61,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Restore last known KRX stock master
+        uses: actions/cache@v4
+        with:
+          path: data/krx-master.json
+          key: ${{ runner.os }}-krx-master-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-krx-master-
       - name: Select refresh mode
         shell: bash
         run: |

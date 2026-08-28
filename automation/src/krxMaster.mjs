@@ -1,16 +1,57 @@
 import { readJson, writeJson } from "./store.mjs";
 
 const KRX_LIST_URL = "https://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13";
+const DEFAULT_RETRY_DELAYS_MS = [2_000, 5_000, 10_000, 20_000];
+const DEFAULT_STALE_CACHE_DAYS = 14;
 
-export async function loadKrxMaster(cacheFile) {
+export async function loadKrxMaster(cacheFile, options = {}) {
   const cached = readJson(cacheFile);
-  if (cached?.updatedDate === koreaDate() && Array.isArray(cached.stocks) && cached.stocks.length > 1000 && cached.stocks.every((stock) => "sector" in stock) && cached.stocks.some((stock) => stock.code === "005930")) {
+  if (cached?.updatedDate === koreaDate() && isValidMaster(cached.stocks)) {
     return cached.stocks;
   }
-  const response = await fetch(KRX_LIST_URL, {
-    headers: { "user-agent": "Mozilla/5.0 Korean-stock-supply-bot", accept: "text/html,application/vnd.ms-excel,*/*" },
+
+  const fetchImpl = options.fetchImpl || fetch;
+  const retryDelaysMs = options.retryDelaysMs || DEFAULT_RETRY_DELAYS_MS;
+  const sleepImpl = options.sleepImpl || sleep;
+  const logger = options.logger || console;
+  const attempts = retryDelaysMs.length + 1;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const stocks = await fetchKrxMaster(fetchImpl, options.timeoutMs || 30_000);
+      writeJson(cacheFile, { updatedDate: koreaDate(), stocks });
+      return stocks;
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts) break;
+      const delayMs = retryDelaysMs[attempt - 1];
+      logger.warn(`KRX 종목 목록 요청 재시도 ${attempt}/${attempts - 1}: ${error.message} (${delayMs}ms 후)`);
+      await sleepImpl(delayMs);
+    }
+  }
+
+  const staleCacheDays = options.staleCacheDays ?? DEFAULT_STALE_CACHE_DAYS;
+  if (isUsableStaleCache(cached, staleCacheDays)) {
+    logger.warn(`KRX 종목 목록 요청이 계속 실패해 직전 정상 캐시(${cached.updatedDate})를 사용합니다: ${lastError?.message}`);
+    return cached.stocks;
+  }
+  throw new Error(`KRX 종목 목록 요청 실패(총 ${attempts}회): ${lastError?.message || "알 수 없는 오류"}`);
+}
+
+async function fetchKrxMaster(fetchImpl, timeoutMs) {
+  const url = new URL(KRX_LIST_URL);
+  url.searchParams.set("_", String(Date.now()));
+  const response = await fetchImpl(url, {
+    headers: {
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      accept: "text/html,application/xhtml+xml,application/vnd.ms-excel,*/*;q=0.8",
+      "accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+      referer: "https://kind.krx.co.kr/",
+    },
+    signal: AbortSignal.timeout(timeoutMs),
   });
-  if (!response.ok) throw new Error(`KRX 종목 목록 요청 실패: HTTP ${response.status}`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const buffer = Buffer.from(await response.arrayBuffer());
   const utf8 = parseKrxList(new TextDecoder("utf-8").decode(buffer));
   const eucKr = parseKrxList(new TextDecoder("euc-kr").decode(buffer));
@@ -18,8 +59,7 @@ export async function loadKrxMaster(cacheFile) {
     // KRX's downloadable list labels KOSPI as "유가" rather than "유가증권".
     .filter((stock) => /유가|코스닥/.test(stock.market))
     .filter((stock) => /^\d{6}$/.test(stock.code));
-  if (stocks.length < 1000) throw new Error("KRX 종목 목록을 해석하지 못했습니다.");
-  writeJson(cacheFile, { updatedDate: koreaDate(), stocks });
+  if (!isValidMaster(stocks)) throw new Error(`응답 해석 실패: ${stocks.length}종목`);
   return stocks;
 }
 
@@ -62,6 +102,26 @@ function hangulCount(stocks) {
 
 function isPreferredShareName(name) {
   return /(?:우|[1-9]우B)$/.test(String(name || ""));
+}
+
+function isValidMaster(stocks) {
+  return Array.isArray(stocks)
+    && stocks.length > 1000
+    && stocks.every((stock) => "sector" in stock)
+    && stocks.some((stock) => stock.code === "005930");
+}
+
+function isUsableStaleCache(cached, maximumAgeDays) {
+  if (!isValidMaster(cached?.stocks)) return false;
+  const updated = Date.parse(`${cached.updatedDate}T00:00:00+09:00`);
+  const today = Date.parse(`${koreaDate()}T00:00:00+09:00`);
+  if (!Number.isFinite(updated) || !Number.isFinite(today)) return false;
+  const ageDays = Math.floor((today - updated) / 86_400_000);
+  return ageDays >= 0 && ageDays <= maximumAgeDays;
+}
+
+function sleep(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 function koreaDate() {
