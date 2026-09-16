@@ -17,3 +17,17 @@ test("stock history shows KIS lending balance change before same-day short-sale 
   assert.match(styles, /\.stock-history-table \{ min-width: 1120px; table-layout: fixed \}/);
   assert.match(styles, /nth-child\(2\).*width: 112px/);
 });
+
+test("stock search shows the extended price beside the KRX closing-auction price", async () => {
+  const [html, app, styles] = await Promise.all([
+    readFile(new URL("dashboard/stocks.html", root), "utf8"),
+    readFile(new URL("dashboard/assets/app.js", root), "utf8"),
+    readFile(new URL("dashboard/assets/styles.css", root), "utf8"),
+  ]);
+  assert.match(html, /app\.js\?v=20260916-1/);
+  assert.match(app, /loadLiveQuotes\(\[r\.code\],true\)/);
+  assert.match(app, /KRX 최근가격 \(KRX 동시호가 종가\)/);
+  assert.match(app, /stock-price-note">\(\$\{number\(krxPrice\)\}원\)<\/span>/);
+  assert.match(app, /koreaExtendedQuoteWindow\(\)&&refreshStockPrice/);
+  assert.match(styles, /\.stock-price-note/);
+});
