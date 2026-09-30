@@ -23,6 +23,8 @@ export class KisClient {
     this.tokenExpiresAt = 0;
     this.tokenPromise = null;
     this.marketOpenCache = new Map();
+    this.tokenRetryDelayMs = config.tokenRetryDelayMs ?? 65_000;
+    this.sleep = config.sleep || ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   }
 
   assertConfigured() {
@@ -126,15 +128,34 @@ export class KisClient {
   }
 
   async #issueToken() {
-    const response = await fetch(`${this.baseUrl}/oauth2/tokenP`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ grant_type: "client_credentials", appkey: this.appKey, appsecret: this.appSecret }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload.access_token) throw new Error(payload.error_description || "KIS 접근 토큰 발급 실패");
-    this.token = payload.access_token;
-    this.tokenExpiresAt = Date.now() + Math.max(60, Number(payload.expires_in || 82800) - 300) * 1000;
-    return this.token;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await fetch(`${this.baseUrl}/oauth2/tokenP`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ grant_type: "client_credentials", appkey: this.appKey, appsecret: this.appSecret }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok && payload.access_token) {
+        this.token = payload.access_token;
+        this.tokenExpiresAt = Date.now() + Math.max(60, Number(payload.expires_in || 82800) - 300) * 1000;
+        return this.token;
+      }
+      const message = payload.error_description || payload.msg1 || "KIS 접근 토큰 발급 실패";
+      const code = payload.error_code || payload.msg_cd || null;
+      if (attempt === 0 && isTokenRateLimitError(code, message)) {
+        console.warn(`KIS 접근 토큰 발급 제한으로 ${Math.ceil(this.tokenRetryDelayMs / 1000)}초 후 한 번 재시도합니다.`);
+        await this.sleep(this.tokenRetryDelayMs);
+        continue;
+      }
+      const error = new Error(message);
+      error.code = code || "KIS_TOKEN_ISSUE_FAILED";
+      throw error;
+    }
+    throw new Error("KIS 접근 토큰 발급 실패");
   }
+}
+
+function isTokenRateLimitError(code, message) {
+  const text = `${code || ""} ${message || ""}`;
+  return /1분당\s*1회|분당\s*1회|접근토큰 발급 잠시 후 다시 시도/i.test(text);
 }

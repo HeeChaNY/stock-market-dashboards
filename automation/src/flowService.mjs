@@ -255,7 +255,7 @@ export async function collectIntradayStockFlow(client, stock, date, options = {}
     name: stock.name,
     market: stock.market,
     sector: stock.sector || "미분류",
-    sourceDate: date,
+    sourceDate: String(quote.stck_bsop_date || date),
     closePrice,
     priceChange,
     priceChangePct,
@@ -290,15 +290,44 @@ export function isKoreaMarketOpen(now = new Date()) {
   return hhmm >= 900 && hhmm <= 1530;
 }
 
+export function dashboardFlowPhase(now = new Date(), isMarketOpenDate = true) {
+  const { weekday, hhmm } = koreaClock(now);
+  if (!isMarketOpenDate || ["Sat", "Sun"].includes(weekday) || hhmm < 800) return "previous-close";
+  if (hhmm <= 1530) return "intraday-first";
+  return "today-close";
+}
+
+export function dashboardConfirmedFlowStatus(phase, requestedDate, sourceDate) {
+  return phase === "today-close" && sourceDate !== requestedDate ? "waiting" : "ready";
+}
+
+export async function isDashboardIntradayAvailable(client, requestedDate, now = new Date(), symbols = ["005930", "000660"]) {
+  const { hhmm } = koreaClock(now);
+  for (const code of symbols) {
+    try {
+      const record = await collectIntradayStockFlow(client, { code, name: code, market: "" }, requestedDate, {
+        requestAttempts: 1,
+        refreshShareCount: false,
+      });
+      const estimateCode = String(record.estimateTimeCode || "").replace(/\D/g, "");
+      const estimateTime = estimateCode.length >= 3 ? Number(estimateCode.slice(0, 4)) : null;
+      if (record.sourceDate === requestedDate
+        && record.estimateAvailable
+        && ((Number.isFinite(estimateTime) && estimateTime >= 800 && estimateTime <= hhmm)
+          || (estimateCode.length > 0 && estimateCode.length < 3 && hhmm >= 930))) return true;
+    } catch (error) {
+      console.warn(`장중 수급 사전 확인 실패 [${code}]: ${error.message}`);
+    }
+  }
+  return false;
+}
+
 export async function resolveLatestCompletedFlowDate(client, requestedDate, now = new Date(), options = {}) {
   let candidate = requestedDate;
-  const koreaNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-  const koreaToday = koreaNow.toISOString().slice(0, 10).replaceAll("-", "");
-  const koreaTime = (koreaNow.getUTCHours() * 100) + koreaNow.getUTCMinutes();
-  // The scheduled dashboard starts after the regular session at 16:00 KST.
-  // From that point onward, probe today's completed investor row first; the
-  // requireRequestedDate guard still prevents stale data from being published.
-  if (requestedDate === koreaToday && koreaTime < 1600) candidate = previousCalendarDate(candidate);
+  const { date: koreaToday, hhmm: koreaTime } = koreaClock(now);
+  const startFromPreviousDate = options.startFromPreviousDate
+    ?? (requestedDate === koreaToday && koreaTime <= 1530);
+  if (startFromPreviousDate) candidate = previousCalendarDate(candidate);
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const payload = await requestWithRetry(() => client.investorDaily("005930", candidate), 2);
     const available = (payload.output2 || [])
@@ -317,6 +346,25 @@ export async function resolveLatestCompletedFlowDate(client, requestedDate, now 
     candidate = previousCalendarDate(candidate);
   }
   throw new Error("최근 마감 수급 기준일을 확인하지 못했습니다. 잠시 후 다시 실행해 주세요.");
+}
+
+function koreaClock(now) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return {
+    date: `${values.year}${values.month}${values.day}`,
+    weekday: values.weekday,
+    hhmm: (Number(values.hour) * 100) + Number(values.minute),
+  };
 }
 
 export async function singleStockFlow(client, code, date) {

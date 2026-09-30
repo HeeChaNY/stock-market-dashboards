@@ -5,8 +5,10 @@ import { KisClient } from "../src/kisClient.mjs";
 import { addKisPreferredShares, loadKrxMaster } from "../src/krxMaster.mjs";
 import { ensureKisListedShares } from "../src/kisMaster.mjs";
 import {
+  dashboardConfirmedFlowStatus,
+  dashboardFlowPhase,
   formatFullReport,
-  isKoreaMarketOpen,
+  isDashboardIntradayAvailable,
   resolveLatestCompletedFlowDate,
   scanWholeMarket,
 } from "../src/flowService.mjs";
@@ -38,32 +40,54 @@ loadDotEnv(".env.hosted");
 const config = getConfig();
 assertSecrets(config);
 const client = new KisClient(config);
-const today = koreaDateCompact();
+const startedAt = new Date();
+const today = koreaDateCompact(startedAt);
 const force = process.env.FORCE_REFRESH === "1";
-const runMode = process.env.RUN_MODE === "intraday" ? "intraday" : "close";
+const requestedRunMode = process.env.RUN_MODE === "intraday" ? "intraday" : "close";
 const existing = loadDashboard(config.dashboardDataFile);
 
-if (runMode === "close" && !force && existing.dates?.includes(today)) {
-  console.log(JSON.stringify({ stage: "skip", reason: "already-updated", date: today }));
-  process.exit(0);
-}
-
 const openDate = await client.isMarketOpenDate(today);
-if (!openDate) {
-  console.log(JSON.stringify({ stage: "skip", reason: "market-closed", date: today }));
-  process.exit(0);
-}
-
-const closingSnapshotGrace = process.env.CLOSING_SNAPSHOT === "1"
-  && isKoreaClosingSnapshotGrace(new Date());
-if (runMode === "intraday" && !isKoreaMarketOpen(new Date()) && !closingSnapshotGrace) {
-  console.log(JSON.stringify({ stage: "skip", reason: "outside-market-hours", date: today }));
-  process.exit(0);
+const phase = dashboardFlowPhase(startedAt, openDate);
+let runMode = phase === "intraday-first" ? "intraday" : "close";
+let fallbackReason = null;
+if (runMode === "intraday") {
+  const intradayAvailable = await isDashboardIntradayAvailable(client, today, startedAt);
+  if (!intradayAvailable) {
+    runMode = "close";
+    fallbackReason = "intraday-not-ready";
+  }
 }
 
 const date = runMode === "intraday"
   ? today
-  : await resolveLatestCompletedFlowDate(client, today, new Date(), { requireRequestedDate: true });
+  : await resolveLatestCompletedFlowDate(client, today, startedAt, {
+    startFromPreviousDate: phase !== "today-close" || Boolean(fallbackReason),
+  });
+
+if (dashboardConfirmedFlowStatus(phase, today, date) === "waiting") {
+  normalExit({
+    stage: "waiting",
+    reason: "confirmed-flow-not-ready",
+    status: "확정 수급 대기",
+    requestedRunMode,
+    runMode,
+    requestedDate: today,
+    sourceDate: date,
+  });
+}
+
+const previousCloseReuse = phase === "previous-close" || Boolean(fallbackReason);
+if (existing.dates?.includes(date) && (previousCloseReuse || (runMode === "close" && !force))) {
+  normalExit({
+    stage: "skip",
+    reason: previousCloseReuse ? "confirmed-date-already-published" : "already-updated",
+    requestedRunMode,
+    runMode,
+    requestedDate: today,
+    sourceDate: date,
+    fallbackReason,
+  });
+}
 const krxStocks = await loadKrxMaster(config.masterCacheFile, {
   fallbackCache: publishedMasterFallback(existing),
 });
@@ -145,6 +169,9 @@ if (runMode === "close") {
 
 const result = {
   stage: "complete",
+  requestedRunMode,
+  phase,
+  fallbackReason,
   runMode,
   date,
   records: scan.records.length,
@@ -162,6 +189,12 @@ const result = {
 };
 writeJson("./automation/output/dashboard-result.json", result);
 console.log(JSON.stringify(result));
+
+function normalExit(resultValue) {
+  writeJson("./automation/output/dashboard-result.json", resultValue);
+  console.log(JSON.stringify(resultValue));
+  process.exit(0);
+}
 
 async function loadEtfSnapshots(dateValue, entries) {
   const key = String(process.env.KRX_OPEN_API_KEY || "").trim();
@@ -298,19 +331,6 @@ function koreaDateCompact(date = new Date()) {
     day: "2-digit",
   }).formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
   return `${parts.year}${parts.month}${parts.day}`;
-}
-
-function isKoreaClosingSnapshotGrace(date = new Date()) {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Seoul",
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
-  if (["Sat", "Sun"].includes(parts.weekday)) return false;
-  const hhmm = (Number(parts.hour) * 100) + Number(parts.minute);
-  return hhmm >= 1530 && hhmm <= 1600;
 }
 
 function integer(value) {

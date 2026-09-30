@@ -111,6 +111,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
       - name: Publish refreshed static data
+        shell: bash
         run: |
           if git diff --quiet -- dashboard/data.js dashboard/latest-flow.xlsx; then
             echo "No dashboard data change."
@@ -120,7 +121,23 @@ jobs:
           git config user.email "stock-dashboard-bot@users.noreply.github.com"
           git add dashboard/data.js dashboard/latest-flow.xlsx
           git commit -m "data: refresh domestic dashboard"
-          git push
+          for attempt in 1 2 3; do
+            echo "Publish attempt $attempt/3"
+            git fetch origin main
+            if ! git rebase origin/main; then
+              echo "Generated dashboard data conflicts with the latest main. Refusing to overwrite it."
+              git rebase --abort || true
+              exit 1
+            fi
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 5
+            fi
+          done
+          echo "Dashboard push was rejected after 3 attempts."
+          exit 1
       - name: Prepare GitHub Pages artifact
         run: |
           mkdir -p site-dist
